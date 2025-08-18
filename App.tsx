@@ -82,9 +82,9 @@ function App() {
       case 'routine':
         return <WorkoutLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} customExercises={customExercises} />;
       case 'nutrition':
-        return <NutritionLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} />;
+        return <NutritionLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} setView={setView} />;
       case 'sleep':
-        return <SleepLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} />;
+        return <SleepLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} setView={setView} />;
       case 'history':
         return <HistoryView logs={filteredLogs} filters={historyFilters} setFilters={setHistoryFilters} />;
       case 'exercises':

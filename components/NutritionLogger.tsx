@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import type { DailyLog, NutritionLog } from '../types';
+import type { DailyLog, NutritionLog, View } from '../types';
 
 interface NutritionLoggerProps {
   selectedDateLog: DailyLog;
   onUpdateLog: (updatedLog: DailyLog) => void;
+  setView: (view: View) => void;
 }
 
-const NutritionLogger: React.FC<NutritionLoggerProps> = ({ selectedDateLog, onUpdateLog }) => {
+const NutritionLogger: React.FC<NutritionLoggerProps> = ({ selectedDateLog, onUpdateLog, setView }) => {
   const [nutrition, setNutrition] = useState<NutritionLog>({
     calories: 0,
     protein: 0,
@@ -30,6 +31,7 @@ const NutritionLogger: React.FC<NutritionLoggerProps> = ({ selectedDateLog, onUp
 
   const handleSave = () => {
     onUpdateLog({ ...selectedDateLog, nutrition });
+    setView('home');
   };
   
   const StatCard: React.FC<{label: string; value: number; unit: string;}> = ({label, value, unit}) => (
