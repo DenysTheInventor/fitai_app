@@ -1,0 +1,5 @@
+{
+  "name": "FitAI Coach",
+  "description": "A personal fitness and nutrition tracker with AI-powered analysis from Gemini to optimize your routine.",
+  "requestFramePermissions": []
+}
