@@ -1,12 +1,13 @@
 import React from 'react';
-import type { DailyLog, View } from '../types';
-import { DumbbellIcon, ForkKnifeIcon, MoonIcon } from '../constants';
+import type { DailyLog, View, CheckIn } from '../types';
+import { DumbbellIcon, ForkKnifeIcon, MoonIcon, ScaleIcon } from '../constants';
 
 interface HomeViewProps {
     todayLog: DailyLog;
     allLogs: DailyLog[];
     setView: (view: View) => void;
     setSelectedDate: (date: string) => void;
+    checkIns: CheckIn[];
 }
 
 const calculateStreak = (logs: DailyLog[]): number => {
@@ -50,15 +51,60 @@ const calculateStreak = (logs: DailyLog[]): number => {
 }
 
 
-const HomeView: React.FC<HomeViewProps> = ({ todayLog, allLogs, setView, setSelectedDate }) => {
+const HomeView: React.FC<HomeViewProps> = ({ todayLog, allLogs, setView, setSelectedDate, checkIns }) => {
     
     const streak = calculateStreak(allLogs);
     const today = new Date().toISOString().split('T')[0];
+    const isMonday = new Date().getDay() === 1;
+    const latestCheckIn = checkIns?.[0];
 
     const navigateToLogger = (view: 'routine' | 'nutrition' | 'sleep') => {
         setSelectedDate(today);
         setView(view);
     };
+    
+    const navigateToCheckInForm = () => {
+        setSelectedDate(today);
+        setView('check-in-form');
+    }
+
+    const CheckInCard = () => {
+        if (isMonday) {
+            return (
+                 <div onClick={navigateToCheckInForm} className="bg-yellow-500/20 border border-yellow-400 p-4 rounded-lg text-center cursor-pointer hover:bg-yellow-500/30 transition-colors">
+                    <h3 className="font-semibold text-lg text-yellow-300">It's Check-in Day!</h3>
+                    <p className="text-sm text-yellow-400">Time to log your weekly progress.</p>
+                </div>
+            )
+        }
+        
+        if (latestCheckIn) {
+            return (
+                 <div onClick={() => setView('check-ins')} className="bg-dark-surface p-4 rounded-lg cursor-pointer">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold text-lg text-white">Latest Check-in</h3>
+                        <p className="text-sm text-dark-text-secondary">{new Date(latestCheckIn.date+'T00:00:00').toLocaleDateString()}</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="bg-dark-card p-3 rounded-md">
+                            <p className="font-bold text-xl text-brand-primary">{latestCheckIn.weight} <span className="text-sm text-dark-text-secondary">kg</span></p>
+                            <p className="text-xs text-dark-text-secondary">Weight</p>
+                        </div>
+                        <div className="bg-dark-card p-3 rounded-md">
+                            <p className="font-bold text-xl text-white">{latestCheckIn.waist} <span className="text-sm text-dark-text-secondary">cm</span></p>
+                            <p className="text-xs text-dark-text-secondary">Waist</p>
+                        </div>
+                        <div className="bg-dark-card p-3 rounded-md">
+                            <p className="font-bold text-xl text-white">{latestCheckIn.chest} <span className="text-sm text-dark-text-secondary">cm</span></p>
+                            <p className="text-xs text-dark-text-secondary">Chest</p>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+
+        return null;
+    }
 
     return (
         <div className="space-y-6">
@@ -75,6 +121,8 @@ const HomeView: React.FC<HomeViewProps> = ({ todayLog, allLogs, setView, setSele
                     </svg>
                 </div>
             </div>
+            
+            <CheckInCard />
             
             <div className="bg-dark-surface p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-4">

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import type { UserSettings, AppData, UserGoal } from '../types';
-import { UserCircleIcon, DownloadIcon, UploadIcon } from '../constants';
+import { UserCircleIcon, DownloadIcon, UploadIcon, ArrowPathIcon } from '../constants';
 
 interface SettingsViewProps {
   settings: UserSettings;
@@ -81,6 +81,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, appD
       }
   };
 
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
   const getBackupReminder = () => {
       if (!settings.lastBackupDate) {
           return <p className="text-xs text-center text-yellow-400">You haven't backed up your data yet. It's a good idea to export it periodically.</p>;
@@ -151,6 +155,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, appD
         <div>
             <h2 className="text-xl font-semibold text-white mb-4">System Settings</h2>
             <div className="bg-dark-surface p-6 rounded-lg space-y-4">
+                <button onClick={handleRefresh} className="w-full flex items-center justify-center gap-2 bg-dark-card text-dark-text font-semibold py-3 rounded-md hover:bg-white/10 transition-colors">
+                    <ArrowPathIcon className="w-5 h-5"/>
+                    Force App Update
+                </button>
                 <button onClick={handleExport} className="w-full flex items-center justify-center gap-2 bg-dark-card text-dark-text font-semibold py-3 rounded-md hover:bg-white/10 transition-colors">
                     <DownloadIcon className="w-5 h-5"/>
                     Export Data (JSON)

@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
-import type { DailyLog, UserSettings } from "../types";
+import type { DailyLog, UserSettings, WorkoutActivity, CheckIn } from "../types";
 
-const API_KEY = import.meta.env.VITE_API_KEY;
+const API_KEY = import.meta.env?.VITE_API_KEY;
 
 if (!API_KEY) {
     console.error("Gemini API key not found. Please create a .env.local file and set the VITE_API_KEY variable.");
@@ -9,7 +9,7 @@ if (!API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
-function formatDataForPrompt(logs: DailyLog[], settings: UserSettings): string {
+function formatDataForPrompt(logs: DailyLog[], settings: UserSettings, checkIns: CheckIn[]): string {
     let formattedString = "Here is the user's profile and their activity log data:\n\n";
 
     // Add user profile information
@@ -26,8 +26,20 @@ function formatDataForPrompt(logs: DailyLog[], settings: UserSettings): string {
     formattedString += "\n";
     
 
-    if (logs.length === 0) {
-        return formattedString + "No activity data available for the selected period.";
+    if (logs.length === 0 && checkIns.length === 0) {
+        return formattedString + "No activity or check-in data available for the selected period.";
+    }
+
+    const logDates = new Set(logs.map(l => l.date));
+    const checkInsForPeriod = checkIns.filter(ci => logDates.has(ci.date));
+
+    if (checkInsForPeriod.length > 0) {
+        formattedString += "--- Body Measurements & Check-ins ---\n";
+        const sortedCheckIns = [...checkInsForPeriod].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        sortedCheckIns.forEach(ci => {
+            formattedString += `Date: ${ci.date} - Weight: ${ci.weight}kg, Waist: ${ci.waist}cm, Chest: ${ci.chest}cm\n`;
+        });
+        formattedString += "\n";
     }
     
     formattedString += "--- Activity Logs ---\n";
@@ -55,13 +67,8 @@ function formatDataForPrompt(logs: DailyLog[], settings: UserSettings): string {
                     const sets = workout.sets.map(s => `${s.reps} reps at ${s.weight}kg`).join(', ');
                     formattedString += `- ${workout.name}: ${sets}\n`;
                 } else if (workout.type === 'Cardio') {
-                    formattedString += `- ${workout.name}: ${workout.durationMinutes} minutes`
-                    if(workout.distanceKm){
-                        formattedString += ` (${workout.distanceKm} km)\n`;
-                    } else {
-                        formattedString += `\n`;
-                    }
-                } else {
+                    formattedString += `- ${workout.name}: ${workout.steps} steps\n`;
+                } else if (workout.type === 'Sport') {
                     formattedString += `- ${workout.name}: ${workout.durationMinutes} minutes\n`;
                 }
             });
@@ -74,21 +81,25 @@ function formatDataForPrompt(logs: DailyLog[], settings: UserSettings): string {
     return formattedString;
 }
 
-export const getAiAnalysis = async (logs: DailyLog[], settings: UserSettings, periodDescription: string): Promise<string> => {
+export const getAiAnalysis = async (logs: DailyLog[], settings: UserSettings, checkIns: CheckIn[], periodDescription: string): Promise<string> => {
     if (!API_KEY) {
         return Promise.reject("API key is not configured. Please create a .env.local file and set VITE_API_KEY.");
     }
     
-    const dataPrompt = formatDataForPrompt(logs, settings);
+    const dataPrompt = formatDataForPrompt(logs, settings, checkIns);
     const fullPrompt = `
         You are an expert fitness and nutrition coach named 'FitAI'.
         A user has asked for an analysis of their data for the following period: **${periodDescription}**.
         
-        Analyze the following user data, which includes their personal profile and their activity logs for the specified period.
+        Analyze the following user data, which includes their personal profile, body measurements, and their activity logs for the specified period.
 
         ${dataPrompt}
 
         Based on all this information (their profile, goal, and logged data), provide a clear, structured analysis. The response MUST be in the following format using markdown:
+
+        **Progress & Body Composition**
+        *   Analyze their weight and measurement trends from the check-in data (if available).
+        *   Comment on how their body composition changes align with their nutrition, training, and overall goal.
 
         **Nutrition Review**
         *   Analyze their calorie and macronutrient intake in relation to their goal.

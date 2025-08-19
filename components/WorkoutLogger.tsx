@@ -26,8 +26,11 @@ const WorkoutCard: React.FC<{ activity: WorkoutActivity, onDelete: () => void }>
                     ))}
                 </ul>
             )}
-            {(activity.type === ActivityType.Cardio || activity.type === ActivityType.Sport) && (
-                 <p className="text-dark-text-secondary">{activity.durationMinutes} minutes {activity.type === ActivityType.Cardio && activity.distanceKm ? ` / ${activity.distanceKm} km` : ''}</p>
+            {activity.type === ActivityType.Cardio && (
+                 <p className="text-dark-text-secondary">{activity.steps} steps</p>
+            )}
+            {activity.type === ActivityType.Sport && (
+                 <p className="text-dark-text-secondary">{activity.durationMinutes} minutes</p>
             )}
         </div>
     );
@@ -39,7 +42,7 @@ const AddWorkoutModal: React.FC<{onClose: () => void; onAdd: (activity: WorkoutA
     const [name, setName] = useState('');
     const [sets, setSets] = useState<Set[]>([{ reps: 8, weight: 20 }]);
     const [duration, setDuration] = useState(30);
-    const [distance, setDistance] = useState(5);
+    const [steps, setSteps] = useState(5000);
 
     const addSet = () => setSets([...sets, { reps: 8, weight: 20 }]);
     const updateSet = <K extends keyof Set>(index: number, field: K, value: Set[K]) => {
@@ -58,7 +61,7 @@ const AddWorkoutModal: React.FC<{onClose: () => void; onAdd: (activity: WorkoutA
                 newActivity = { id, name, type: ActivityType.WeightLifting, sets };
                 break;
             case ActivityType.Cardio:
-                newActivity = { id, name, type: ActivityType.Cardio, durationMinutes: duration, distanceKm: distance };
+                newActivity = { id, name, type: ActivityType.Cardio, steps };
                 break;
             case ActivityType.Sport:
                 newActivity = { id, name, type: ActivityType.Sport, durationMinutes: duration };
@@ -95,7 +98,7 @@ const AddWorkoutModal: React.FC<{onClose: () => void; onAdd: (activity: WorkoutA
                             )}
                         </>
                     ) : (
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder={activityType === ActivityType.Cardio ? "e.g., Treadmill Run" : "e.g., Football"} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text focus:ring-brand-primary focus:border-brand-primary" />
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder={activityType === ActivityType.Cardio ? "e.g., Daily Walk" : "e.g., Football"} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text focus:ring-brand-primary focus:border-brand-primary" />
                     )}
                 </div>
                 
@@ -115,14 +118,20 @@ const AddWorkoutModal: React.FC<{onClose: () => void; onAdd: (activity: WorkoutA
                    </div>
                 )}
                 
-                {(activityType === ActivityType.Cardio || activityType === ActivityType.Sport) && (
-                   <div className="flex gap-2">
-                      <input type="number" value={duration} onChange={e => setDuration(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text" placeholder="Duration (min)" />
-                      {activityType === ActivityType.Cardio && (
-                         <input type="number" value={distance} onChange={e => setDistance(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text" placeholder="Distance (km)" />
-                      )}
-                   </div>
+                {activityType === ActivityType.Cardio && (
+                    <div>
+                        <label className="block text-sm font-medium text-dark-text-secondary mb-1">Steps</label>
+                        <input type="number" value={steps} onChange={e => setSteps(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text" placeholder="e.g., 10000" />
+                    </div>
                 )}
+
+                {activityType === ActivityType.Sport && (
+                    <div>
+                        <label className="block text-sm font-medium text-dark-text-secondary mb-1">Duration (minutes)</label>
+                        <input type="number" value={duration} onChange={e => setDuration(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text" placeholder="e.g., 60" />
+                    </div>
+                )}
+
 
                 <div className="mt-6 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 rounded-md bg-dark-card text-dark-text hover:bg-white/10 transition-colors">Cancel</button>

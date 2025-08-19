@@ -1,4 +1,4 @@
-export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'settings' | 'sleep';
+export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'settings' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail';
 
 export enum ActivityType {
   WeightLifting = 'WeightLifting',
@@ -24,8 +24,7 @@ export interface Cardio {
   id: string;
   name: string;
   type: ActivityType.Cardio;
-  durationMinutes: number;
-  distanceKm?: number;
+  steps: number;
 }
 
 export interface Sport {
@@ -61,6 +60,16 @@ export interface CustomExercise {
     name: string;
 }
 
+export interface CheckIn {
+  id: string;
+  date: string; // YYYY-MM-DD
+  weight: number;
+  waist: number;
+  chest: number;
+  photo1: string | null;
+  photo2: string | null;
+}
+
 export interface UserSettings {
   name: string;
   photo: string | null; // Base64 encoded image
@@ -76,4 +85,5 @@ export interface AppData {
   logs: DailyLog[];
   customExercises: CustomExercise[];
   userSettings: UserSettings;
+  checkIns: CheckIn[];
 }

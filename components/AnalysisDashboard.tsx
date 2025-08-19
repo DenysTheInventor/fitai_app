@@ -1,12 +1,14 @@
 
+
 import React, { useState, useCallback } from 'react';
 import { getAiAnalysis } from '../services/geminiService';
-import type { DailyLog, UserSettings } from '../types';
+import type { DailyLog, UserSettings, CheckIn } from '../types';
 import { SparklesIcon } from '../constants';
 
 interface AnalysisDashboardProps {
   allLogs: DailyLog[];
   userSettings: UserSettings;
+  checkIns: CheckIn[];
 }
 
 type Period = 'day' | 'week' | 'month';
@@ -30,7 +32,7 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
   return <div className="prose prose-invert text-dark-text-secondary space-y-2">{renderContent()}</div>;
 };
 
-const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ allLogs, userSettings }) => {
+const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ allLogs, userSettings, checkIns }) => {
   const [analysis, setAnalysis] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -80,14 +82,14 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ allLogs, userSett
     }
 
     try {
-      const result = await getAiAnalysis(logsForAnalysis, userSettings, periodDescription);
+      const result = await getAiAnalysis(logsForAnalysis, userSettings, checkIns, periodDescription);
       setAnalysis(result);
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
-  }, [allLogs, userSettings, period, selectedDate]);
+  }, [allLogs, userSettings, checkIns, period, selectedDate]);
   
   const PeriodButton: React.FC<{label: string, value: Period}> = ({label, value}) => (
     <button onClick={() => setPeriod(value)} className={`px-4 py-2 text-sm rounded-md transition-colors ${period === value ? 'bg-brand-secondary text-white font-semibold' : 'bg-dark-card text-dark-text-secondary hover:bg-white/10'}`}>

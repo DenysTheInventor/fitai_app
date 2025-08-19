@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { DailyLog, View } from '../types';
-import { DumbbellIcon, ForkKnifeIcon, MoonIcon } from '../constants';
+import { DumbbellIcon, ForkKnifeIcon, MoonIcon, ScaleIcon } from '../constants';
 
 interface CalendarViewProps {
   logs: DailyLog[];
@@ -11,8 +11,9 @@ interface CalendarViewProps {
 const AddLogChoiceModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
-    onChoice: (view: 'routine' | 'nutrition' | 'sleep') => void;
-}> = ({ isOpen, onClose, onChoice }) => {
+    onChoice: (view: 'routine' | 'nutrition' | 'sleep' | 'check-in-form') => void;
+    isMonday: boolean;
+}> = ({ isOpen, onClose, onChoice, isMonday }) => {
     if (!isOpen) return null;
 
     return (
@@ -20,6 +21,15 @@ const AddLogChoiceModal: React.FC<{
             <div className="bg-dark-surface rounded-lg p-6 w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
                 <h2 className="text-xl font-bold mb-6 text-center text-white">What would you like to log?</h2>
                 <div className="space-y-4">
+                     {isMonday && (
+                        <button
+                            onClick={() => onChoice('check-in-form')}
+                            className="w-full flex items-center justify-center gap-3 text-lg bg-dark-card p-4 rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                            <ScaleIcon className="w-8 h-8 text-green-400" />
+                            <span>Add Check-in</span>
+                        </button>
+                    )}
                     <button
                         onClick={() => onChoice('routine')}
                         className="w-full flex items-center justify-center gap-3 text-lg bg-dark-card p-4 rounded-lg hover:bg-white/10 transition-colors"
@@ -51,6 +61,7 @@ const AddLogChoiceModal: React.FC<{
 const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setView }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isChoiceModalOpen, setIsChoiceModalOpen] = useState(false);
+  const [isDayMonday, setIsDayMonday] = useState(false);
 
   const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   
@@ -63,6 +74,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setV
 
   const handleDayClick = (day: number) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    // getDay() returns 0 for Sunday, 1 for Monday, etc.
+    setIsDayMonday(date.getDay() === 1); 
     const dateString = date.toISOString().split('T')[0];
     setSelectedDate(dateString);
     setIsChoiceModalOpen(true);
@@ -72,7 +85,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setV
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
   };
   
-  const handleChoice = (view: 'routine' | 'nutrition' | 'sleep') => {
+  const handleChoice = (view: 'routine' | 'nutrition' | 'sleep' | 'check-in-form') => {
     setView(view);
     setIsChoiceModalOpen(false);
   };
@@ -128,6 +141,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setV
         isOpen={isChoiceModalOpen}
         onClose={() => setIsChoiceModalOpen(false)}
         onChoice={handleChoice}
+        isMonday={isDayMonday}
        />
     </>
   );

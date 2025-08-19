@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import type { DailyLog, SleepLog, View } from '../types';
+import type { DailyLog, SleepLog } from '../types';
 import { MoonIcon } from '../constants';
 
 interface SleepLoggerProps {
   selectedDateLog: DailyLog;
   onUpdateLog: (updatedLog: DailyLog) => void;
-  setView: (view: View) => void;
+  goBack: () => void;
 }
 
-const SleepLogger: React.FC<SleepLoggerProps> = ({ selectedDateLog, onUpdateLog, setView }) => {
+const SleepLogger: React.FC<SleepLoggerProps> = ({ selectedDateLog, onUpdateLog, goBack }) => {
   const [duration, setDuration] = useState<number>(8);
 
   useEffect(() => {
@@ -27,13 +27,13 @@ const SleepLogger: React.FC<SleepLoggerProps> = ({ selectedDateLog, onUpdateLog,
   const handleSave = () => {
     const sleepLog: SleepLog = { durationHours: duration };
     onUpdateLog({ ...selectedDateLog, sleep: sleepLog });
-    setView('home');
+    goBack();
   };
   
   const handleRemove = () => {
     onUpdateLog({ ...selectedDateLog, sleep: null });
     setDuration(8);
-    setView('home');
+    goBack();
   };
 
   return (
