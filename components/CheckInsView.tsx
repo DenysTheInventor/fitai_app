@@ -1,18 +1,31 @@
 import React from 'react';
 import type { CheckIn, View } from '../types';
+import { PencilIcon, TrashIcon } from '../constants';
 
 interface CheckInsViewProps {
   checkIns: CheckIn[];
   setView: (view: View) => void;
   setSelectedCheckInId: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const CheckInsView: React.FC<CheckInsViewProps> = ({ checkIns, setView, setSelectedCheckInId }) => {
+const CheckInsView: React.FC<CheckInsViewProps> = ({ checkIns, setView, setSelectedCheckInId, onDelete }) => {
 
   const handleSelect = (id: string) => {
     setSelectedCheckInId(id);
     setView('check-in-detail');
   };
+  
+  const handleEdit = (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      setSelectedCheckInId(id);
+      setView('check-in-form');
+  }
+  
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      onDelete(id);
+  }
 
   if (checkIns.length === 0) {
     return (
@@ -27,9 +40,19 @@ const CheckInsView: React.FC<CheckInsViewProps> = ({ checkIns, setView, setSelec
     <div className="space-y-4">
       {checkIns.map(checkIn => (
         <div key={checkIn.id} onClick={() => handleSelect(checkIn.id)} className="bg-dark-surface p-4 rounded-lg cursor-pointer hover:bg-dark-card transition-colors">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-bold text-white">{new Date(checkIn.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
-             <span className="text-xs text-brand-primary font-semibold">View Details &rarr;</span>
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              <h3 className="font-bold text-white">{new Date(checkIn.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+              <span className="text-xs text-brand-primary font-semibold">View Details &rarr;</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <button onClick={(e) => handleEdit(e, checkIn.id)} className="p-2 text-dark-text-secondary hover:text-white transition-colors" aria-label="Edit check-in">
+                    <PencilIcon className="w-5 h-5" />
+                </button>
+                <button onClick={(e) => handleDelete(e, checkIn.id)} className="p-2 text-dark-text-secondary hover:text-red-500 transition-colors" aria-label="Delete check-in">
+                    <TrashIcon className="w-5 h-5" />
+                </button>
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-dark-card p-3 rounded-md">

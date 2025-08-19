@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { CheckIn } from '../types';
 import { CameraIcon } from '../constants';
 
 interface CheckInFormViewProps {
-  onSave: (checkIn: Omit<CheckIn, 'id'>) => void;
+  onSave: (checkIn: CheckIn | Omit<CheckIn, 'id' | 'date'> & { date: string }) => void;
   goBack: () => void;
   date: string;
+  checkInToEdit?: CheckIn;
 }
 
 const PhotoUpload: React.FC<{ label: string; photo: string | null; onUpload: (base64: string) => void;}> = ({ label, photo, onUpload }) => {
@@ -26,7 +27,7 @@ const PhotoUpload: React.FC<{ label: string; photo: string | null; onUpload: (ba
         <div>
             <label className="block text-sm font-medium text-dark-text-secondary mb-1">{label}</label>
             <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleUpload}/>
-            <button onClick={() => fileInputRef.current?.click()} className="w-full aspect-square bg-dark-card rounded-lg flex items-center justify-center border-2 border-dashed border-white/20 hover:border-brand-primary transition-colors">
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full aspect-square bg-dark-card rounded-lg flex items-center justify-center border-2 border-dashed border-white/20 hover:border-brand-primary transition-colors">
                 {photo ? (
                     <img src={photo} alt={label} className="w-full h-full object-cover rounded-lg"/>
                 ) : (
@@ -40,12 +41,22 @@ const PhotoUpload: React.FC<{ label: string; photo: string | null; onUpload: (ba
     )
 }
 
-const CheckInFormView: React.FC<CheckInFormViewProps> = ({ onSave, goBack, date }) => {
+const CheckInFormView: React.FC<CheckInFormViewProps> = ({ onSave, goBack, date, checkInToEdit }) => {
   const [weight, setWeight] = useState<number | ''>('');
   const [waist, setWaist] = useState<number | ''>('');
   const [chest, setChest] = useState<number | ''>('');
   const [photo1, setPhoto1] = useState<string | null>(null);
   const [photo2, setPhoto2] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (checkInToEdit) {
+        setWeight(checkInToEdit.weight);
+        setWaist(checkInToEdit.waist);
+        setChest(checkInToEdit.chest);
+        setPhoto1(checkInToEdit.photo1);
+        setPhoto2(checkInToEdit.photo2);
+    }
+  }, [checkInToEdit]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +64,21 @@ const CheckInFormView: React.FC<CheckInFormViewProps> = ({ onSave, goBack, date 
         alert('Please fill out all measurement fields.');
         return;
     }
-    onSave({ date, weight, waist, chest, photo1, photo2 });
+
+    const checkInData = {
+        date: checkInToEdit ? checkInToEdit.date : date,
+        weight: +weight,
+        waist: +waist,
+        chest: +chest,
+        photo1,
+        photo2,
+    };
+    
+    if (checkInToEdit) {
+        onSave({ ...checkInData, id: checkInToEdit.id });
+    } else {
+        onSave(checkInData);
+    }
   };
 
   return (
@@ -86,7 +111,7 @@ const CheckInFormView: React.FC<CheckInFormViewProps> = ({ onSave, goBack, date 
           Cancel
         </button>
         <button type="submit" className="w-full bg-brand-primary text-dark-bg font-bold py-3 rounded-md hover:opacity-90 transition-opacity">
-          Save Check-in
+          {checkInToEdit ? 'Update Check-in' : 'Save Check-in'}
         </button>
       </div>
     </form>

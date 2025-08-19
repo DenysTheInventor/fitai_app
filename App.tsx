@@ -23,6 +23,7 @@ const initialSettings: UserSettings = {
     weight: null,
     height: null,
     age: null,
+    gender: null,
     goal: null,
     bio: '',
     lastBackupDate: null
@@ -74,11 +75,22 @@ function App() {
     setLogs([...otherLogs, ...finalLog].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   };
   
-  const handleAddCheckIn = (newCheckIn: Omit<CheckIn, 'id'>) => {
-    const checkInWithId: CheckIn = { ...newCheckIn, id: new Date().toISOString() };
-    setCheckIns(prev => [...prev, checkInWithId].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  const handleSaveCheckIn = (checkIn: CheckIn | Omit<CheckIn, 'id' | 'date'> & {date: string}) => {
+    if ('id' in checkIn) { // Update existing
+      setCheckIns(prev => prev.map(ci => ci.id === checkIn.id ? checkIn : ci).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    } else { // Create new
+      const checkInWithId: CheckIn = { ...checkIn, id: new Date().toISOString() };
+      setCheckIns(prev => [...prev, checkInWithId].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
     goBack();
   };
+  
+  const handleDeleteCheckIn = (id: string) => {
+    if(window.confirm("Are you sure you want to delete this check-in? This action cannot be undone.")) {
+      setCheckIns(prev => prev.filter(ci => ci.id !== id));
+    }
+  };
+
 
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
@@ -108,7 +120,7 @@ function App() {
       case 'home':
         return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} />;
       case 'calendar':
-        return <CalendarView logs={logs} setSelectedDate={setSelectedDate} setView={setView} />;
+        return <CalendarView logs={logs} checkIns={checkIns} setSelectedDate={setSelectedDate} setView={setView} setSelectedCheckInId={setSelectedCheckInId} />;
       case 'routine':
         return <WorkoutLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} customExercises={customExercises} />;
       case 'nutrition':
@@ -125,9 +137,10 @@ function App() {
         const appData: AppData = { logs, customExercises, userSettings, checkIns };
         return <SettingsView settings={userSettings} setSettings={setUserSettings} appData={appData} onImport={handleImportData} />;
       case 'check-in-form':
-        return <CheckInFormView onSave={handleAddCheckIn} goBack={goBack} date={selectedDate} />;
+        const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
+        return <CheckInFormView onSave={handleSaveCheckIn} goBack={goBack} date={selectedDate} checkInToEdit={checkInToEdit} />;
       case 'check-ins':
-        return <CheckInsView checkIns={checkIns} setView={setView} setSelectedCheckInId={setSelectedCheckInId} />;
+        return <CheckInsView checkIns={checkIns} setView={setView} setSelectedCheckInId={setSelectedCheckInId} onDelete={handleDeleteCheckIn} />;
       case 'check-in-detail':
         const selectedCheckIn = checkIns.find(ci => ci.id === selectedCheckInId);
         return <CheckInDetailView checkIn={selectedCheckIn} goBack={goBack} />;
@@ -151,7 +164,11 @@ function App() {
         case 'analysis': return 'AI Analysis';
         case 'settings': return 'Settings';
         case 'check-ins': return 'Check-in History';
-        case 'check-in-form': return `Check-in for ${new Date(selectedDate+'T00:00:00').toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}`;
+        case 'check-in-form':
+            const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
+            const formDate = checkInToEdit ? checkInToEdit.date : selectedDate;
+            const titlePrefix = checkInToEdit ? 'Edit Check-in' : 'New Check-in';
+            return `${titlePrefix} for ${new Date(formDate+'T00:00:00').toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}`;
         case 'check-in-detail': 
             const checkIn = checkIns.find(ci => ci.id === selectedCheckInId);
             return checkIn ? `Check-in: ${new Date(checkIn.date+'T00:00:00').toLocaleDateString()}` : 'Check-in Details';

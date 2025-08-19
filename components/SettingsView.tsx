@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import type { UserSettings, AppData, UserGoal } from '../types';
+import type { UserSettings, AppData, UserGoal, UserGender } from '../types';
 import { UserCircleIcon, DownloadIcon, UploadIcon, ArrowPathIcon } from '../constants';
 
 interface SettingsViewProps {
@@ -101,6 +101,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, appD
     { value: 'maintain', label: 'Maintain Weight' },
     { value: 'gain', label: 'Gain Muscle' },
   ];
+  
+  const genderOptions: {value: UserGender, label: string}[] = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+  ];
 
   return (
     <div className="space-y-8">
@@ -118,6 +123,14 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, appD
                 <div>
                   <label className="block text-sm font-medium text-dark-text-secondary mb-1">Name</label>
                   <input type="text" name="name" value={localSettings.name} onChange={handleInputChange} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text"/>
+                </div>
+                
+                 <div>
+                  <label className="block text-sm font-medium text-dark-text-secondary mb-1">Gender</label>
+                  <select name="gender" value={localSettings.gender || ''} onChange={handleInputChange} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text">
+                      <option value="">Prefer not to say</option>
+                      {genderOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">

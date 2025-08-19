@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import type { DailyLog, View } from '../types';
-import { DumbbellIcon, ForkKnifeIcon, MoonIcon, ScaleIcon } from '../constants';
+import type { DailyLog, View, CheckIn } from '../types';
+import { DumbbellIcon, ForkKnifeIcon, MoonIcon, CheckBadgeIcon } from '../constants';
 
 interface CalendarViewProps {
   logs: DailyLog[];
+  checkIns: CheckIn[];
   setSelectedDate: (date: string) => void;
   setView: (view: View) => void;
+  setSelectedCheckInId: (id: string | null) => void;
 }
 
 const AddLogChoiceModal: React.FC<{
@@ -13,7 +15,8 @@ const AddLogChoiceModal: React.FC<{
     onClose: () => void;
     onChoice: (view: 'routine' | 'nutrition' | 'sleep' | 'check-in-form') => void;
     isMonday: boolean;
-}> = ({ isOpen, onClose, onChoice, isMonday }) => {
+    canAddCheckIn: boolean;
+}> = ({ isOpen, onClose, onChoice, isMonday, canAddCheckIn }) => {
     if (!isOpen) return null;
 
     return (
@@ -21,12 +24,12 @@ const AddLogChoiceModal: React.FC<{
             <div className="bg-dark-surface rounded-lg p-6 w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
                 <h2 className="text-xl font-bold mb-6 text-center text-white">What would you like to log?</h2>
                 <div className="space-y-4">
-                     {isMonday && (
+                     {isMonday && canAddCheckIn && (
                         <button
                             onClick={() => onChoice('check-in-form')}
                             className="w-full flex items-center justify-center gap-3 text-lg bg-dark-card p-4 rounded-lg hover:bg-white/10 transition-colors"
                         >
-                            <ScaleIcon className="w-8 h-8 text-green-400" />
+                            <CheckBadgeIcon className="w-8 h-8 text-green-400" />
                             <span>Add Check-in</span>
                         </button>
                     )}
@@ -58,10 +61,11 @@ const AddLogChoiceModal: React.FC<{
 };
 
 
-const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setView }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelectedDate, setView, setSelectedCheckInId }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isChoiceModalOpen, setIsChoiceModalOpen] = useState(false);
   const [isDayMonday, setIsDayMonday] = useState(false);
+  const [canAddCheckInForSelectedDate, setCanAddCheckInForSelectedDate] = useState(true);
 
   const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   
@@ -71,12 +75,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setV
   const totalDays = endOfMonth.getDate();
 
   const logsByDate = new Map(logs.map(log => [log.date, log]));
+  const checkInsByDate = new Map(checkIns.map(ci => [ci.date, ci]));
 
   const handleDayClick = (day: number) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    // getDay() returns 0 for Sunday, 1 for Monday, etc.
-    setIsDayMonday(date.getDay() === 1); 
     const dateString = date.toISOString().split('T')[0];
+
+    setIsDayMonday(date.getDay() === 1); 
+    setCanAddCheckInForSelectedDate(!checkInsByDate.has(dateString));
+    
     setSelectedDate(dateString);
     setIsChoiceModalOpen(true);
   };
@@ -86,6 +93,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setV
   };
   
   const handleChoice = (view: 'routine' | 'nutrition' | 'sleep' | 'check-in-form') => {
+    if (view === 'check-in-form') {
+      setSelectedCheckInId(null); // Ensure we're creating a new one
+    }
     setView(view);
     setIsChoiceModalOpen(false);
   };
@@ -100,6 +110,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setV
         const dateString = date.toISOString().split('T')[0];
         const isToday = dateString === new Date().toISOString().split('T')[0];
         const logForDay = logsByDate.get(dateString);
+        const hasCheckIn = checkInsByDate.has(dateString);
         const hasWorkout = logForDay && logForDay.workouts.length > 0;
         const hasNutrition = logForDay && logForDay.nutrition;
         const hasSleep = logForDay && logForDay.sleep;
@@ -110,6 +121,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setV
                     {day}
                 </span>
                 <div className="flex gap-1 mt-1 h-3">
+                    {hasCheckIn && <CheckBadgeIcon className="w-3 h-3 text-green-400" />}
                     {hasWorkout && <DumbbellIcon className="w-3 h-3 text-brand-secondary" />}
                     {hasNutrition && <ForkKnifeIcon className="w-3 h-3 text-brand-primary" />}
                     {hasSleep && <MoonIcon className="w-3 h-3 text-blue-400" />}
@@ -142,6 +154,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, setSelectedDate, setV
         onClose={() => setIsChoiceModalOpen(false)}
         onChoice={handleChoice}
         isMonday={isDayMonday}
+        canAddCheckIn={canAddCheckInForSelectedDate}
        />
     </>
   );

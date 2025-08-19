@@ -7,6 +7,7 @@ export enum ActivityType {
 }
 
 export type UserGoal = 'lose' | 'maintain' | 'gain';
+export type UserGender = 'male' | 'female';
 
 export interface Set {
   reps: number;
@@ -76,6 +77,7 @@ export interface UserSettings {
   weight: number | null;
   height: number | null;
   age: number | null;
+  gender: UserGender | null;
   goal: UserGoal | null;
   bio: string;
   lastBackupDate: string | null;

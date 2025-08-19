@@ -16,6 +16,7 @@ function formatDataForPrompt(logs: DailyLog[], settings: UserSettings, checkIns:
     formattedString += "--- User Profile ---\n";
     formattedString += `Name: ${settings.name}\n`;
     if (settings.age) formattedString += `Age: ${settings.age}\n`;
+    if (settings.gender) formattedString += `Gender: ${settings.gender}\n`;
     if (settings.weight) formattedString += `Weight: ${settings.weight} kg\n`;
     if (settings.height) formattedString += `Height: ${settings.height} cm\n`;
     if (settings.goal) {
