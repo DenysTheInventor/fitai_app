@@ -29,6 +29,13 @@ const initialSettings: UserSettings = {
     lastBackupDate: null
 };
 
+const getLocalDateString = (d: Date = new Date()): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 function App() {
   const [viewHistory, setViewHistory] = useState<View[]>(['home']);
   const view = viewHistory[viewHistory.length - 1];
@@ -38,7 +45,7 @@ function App() {
   const [userSettings, setUserSettings] = useLocalStorage<UserSettings>('fitai-settings', initialSettings);
   const [checkIns, setCheckIns] = useLocalStorage<CheckIn[]>('fitai-checkins', []);
   
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const [selectedCheckInId, setSelectedCheckInId] = useState<string | null>(null);
   
   const setView = (newView: View, options?: { replace?: boolean }) => {
@@ -113,7 +120,7 @@ function App() {
   }
 
   const renderView = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const logForSelectedDate = getLogForDate(selectedDate);
     
     switch (view) {
@@ -156,7 +163,7 @@ function App() {
         case 'nutrition':
         case 'sleep':
             const date = new Date(`${selectedDate}T00:00:00`);
-            const isToday = selectedDate === new Date().toISOString().split('T')[0];
+            const isToday = selectedDate === getLocalDateString();
             return isToday ? 'Today\'s Log' : date.toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' });
         case 'calendar': return 'Calendar';
         case 'history': return 'Log History';

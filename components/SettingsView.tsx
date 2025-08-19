@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { UserSettings, AppData, UserGoal, UserGender } from '../types';
 import { UserCircleIcon, DownloadIcon, UploadIcon, ArrowPathIcon } from '../constants';
 
@@ -13,6 +13,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, appD
   const [localSettings, setLocalSettings] = useState<UserSettings>(settings);
   const photoFileInputRef = useRef<HTMLInputElement>(null);
   const jsonFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
   
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

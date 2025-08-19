@@ -10,6 +10,13 @@ interface HomeViewProps {
     checkIns: CheckIn[];
 }
 
+const getLocalDateString = (d = new Date()): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const calculateStreak = (logs: DailyLog[]): number => {
     if (logs.length === 0) return 0;
     
@@ -54,7 +61,7 @@ const calculateStreak = (logs: DailyLog[]): number => {
 const HomeView: React.FC<HomeViewProps> = ({ todayLog, allLogs, setView, setSelectedDate, checkIns }) => {
     
     const streak = calculateStreak(allLogs);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const isMonday = new Date().getDay() === 1;
     const latestCheckIn = checkIns?.[0];
 

@@ -10,6 +10,13 @@ interface CalendarViewProps {
   setSelectedCheckInId: (id: string | null) => void;
 }
 
+const getLocalDateString = (d = new Date()): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const AddLogChoiceModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
@@ -79,7 +86,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelected
 
   const handleDayClick = (day: number) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
     setIsDayMonday(date.getDay() === 1); 
     setCanAddCheckInForSelectedDate(!checkInsByDate.has(dateString));
@@ -107,8 +114,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelected
     }
     for (let day = 1; day <= totalDays; day++) {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-        const dateString = date.toISOString().split('T')[0];
-        const isToday = dateString === new Date().toISOString().split('T')[0];
+        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const isToday = dateString === getLocalDateString();
         const logForDay = logsByDate.get(dateString);
         const hasCheckIn = checkInsByDate.has(dateString);
         const hasWorkout = logForDay && logForDay.workouts.length > 0;
@@ -116,12 +123,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelected
         const hasSleep = logForDay && logForDay.sleep;
 
         days.push(
-            <div key={day} onClick={() => handleDayClick(day)} className="w-full aspect-square flex flex-col items-center justify-center cursor-pointer rounded-lg hover:bg-dark-card transition-colors p-1">
+            <div key={day} onClick={() => handleDayClick(day)} className="relative w-full aspect-square flex flex-col items-center justify-center cursor-pointer rounded-lg hover:bg-dark-card transition-colors p-1">
+                {hasCheckIn && <CheckBadgeIcon className="absolute top-1 right-1 w-4 h-4 text-green-400" />}
                 <span className={`flex items-center justify-center rounded-full w-8 h-8 text-sm ${isToday ? 'bg-brand-primary text-dark-bg font-bold' : 'text-dark-text'}`}>
                     {day}
                 </span>
                 <div className="flex gap-1 mt-1 h-3">
-                    {hasCheckIn && <CheckBadgeIcon className="w-3 h-3 text-green-400" />}
                     {hasWorkout && <DumbbellIcon className="w-3 h-3 text-brand-secondary" />}
                     {hasNutrition && <ForkKnifeIcon className="w-3 h-3 text-brand-primary" />}
                     {hasSleep && <MoonIcon className="w-3 h-3 text-blue-400" />}

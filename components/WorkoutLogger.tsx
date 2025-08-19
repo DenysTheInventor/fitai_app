@@ -40,11 +40,11 @@ const WorkoutCard: React.FC<{ activity: WorkoutActivity, onDelete: () => void }>
 const AddWorkoutModal: React.FC<{onClose: () => void; onAdd: (activity: WorkoutActivity) => void; customExercises: CustomExercise[]}> = ({ onClose, onAdd, customExercises }) => {
     const [activityType, setActivityType] = useState<ActivityType>(ActivityType.WeightLifting);
     const [name, setName] = useState('');
-    const [sets, setSets] = useState<Set[]>([{ reps: 8, weight: 20 }]);
+    const [sets, setSets] = useState<Set[]>([{ reps: 30, weight: 12.5 }]);
     const [duration, setDuration] = useState(30);
-    const [steps, setSteps] = useState(5000);
+    const [steps, setSteps] = useState(10000);
 
-    const addSet = () => setSets([...sets, { reps: 8, weight: 20 }]);
+    const addSet = () => setSets([...sets, { reps: 30, weight: 12.5 }]);
     const updateSet = <K extends keyof Set>(index: number, field: K, value: Set[K]) => {
         const newSets = [...sets];
         newSets[index][field] = value;

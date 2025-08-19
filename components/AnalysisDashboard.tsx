@@ -11,6 +11,13 @@ interface AnalysisDashboardProps {
   checkIns: CheckIn[];
 }
 
+const getLocalDateString = (d = new Date()): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 type Period = 'day' | 'week' | 'month';
 
 const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
@@ -37,7 +44,7 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ allLogs, userSett
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [period, setPeriod] = useState<Period>('week');
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
 
   const handleAnalyze = useCallback(async () => {
     setIsLoading(true);
