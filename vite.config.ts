@@ -3,28 +3,33 @@ import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load environment variables from .env files in the root directory.
+  // Load environment variables from .env files.
+  // The third parameter `''` makes it load all variables, not just those prefixed with VITE_.
   const env = loadEnv(mode, '.', '');
 
-  // This check is crucial. It runs during the build process (on the server/build machine).
-  // If the API_KEY is not found in any .env file or as a system environment variable,
-  // the build will fail with an explicit error message. This prevents deploying a
-  // non-functional app and clearly indicates the configuration issue.
-  if (!env.API_KEY) {
+  // Check for API_KEY and fall back to VITE_API_KEY.
+  // This provides flexibility for different deployment environments.
+  // Some platforms (like Netlify, Vercel) automatically expose variables
+  // with a specific prefix (like VITE_), while local development might use a simple .env file.
+  const apiKey = env.API_KEY || env.VITE_API_KEY;
+
+  // If neither API_KEY nor VITE_API_KEY is found, the build will fail.
+  // This is a safety measure to prevent deploying a non-functional application.
+  if (!apiKey) {
     throw new Error(
-      'Vite build failed: API_KEY is not defined. ' +
-      'Please ensure it is set in a .env file at the root of your project ' +
-      'or as a system environment variable on your build machine.'
+      'Vite build failed: API_KEY or VITE_API_KEY is not defined. ' +
+      'Please set one of these in your build environment (e.g., in your hosting provider\'s settings) ' +
+      'or in a .env file at the project root.'
     );
   }
 
   return {
     plugins: [react()],
     define: {
-      // This performs a static replacement. In your final JavaScript bundle,
-      // every occurrence of `process.env.API_KEY` will be replaced with the
-      // actual API key string.
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // This config statically replaces `process.env.API_KEY` in the client-side code
+      // with the value of `apiKey`. This is how the key becomes available to the
+      // Gemini SDK in the browser, while adhering to the requirement of using `process.env.API_KEY`.
+      'process.env.API_KEY': JSON.stringify(apiKey)
     }
   }
 })
