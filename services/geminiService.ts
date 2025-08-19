@@ -1,13 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import type { DailyLog, UserSettings } from "../types";
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
+if (!process.env.API_KEY) {
     console.error("Gemini API key not found. Please set the API_KEY environment variable.");
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
 
 function formatDataForPrompt(logs: DailyLog[], settings: UserSettings): string {
     let formattedString = "Here is the user's profile and their activity log data:\n\n";
@@ -75,7 +73,7 @@ function formatDataForPrompt(logs: DailyLog[], settings: UserSettings): string {
 }
 
 export const getAiAnalysis = async (logs: DailyLog[], settings: UserSettings, periodDescription: string): Promise<string> => {
-    if (!API_KEY) {
+    if (!process.env.API_KEY) {
         return Promise.reject("API key is not configured.");
     }
     
