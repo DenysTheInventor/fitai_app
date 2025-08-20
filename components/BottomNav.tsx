@@ -31,6 +31,7 @@ const NavButton: React.FC<{
 
 const BottomNav: React.FC<BottomNavProps> = ({ currentView, setView }) => {
   const isActivityView = currentView === 'routine' || currentView === 'nutrition';
+  const isExerciseView = ['exercises', 'exercise-library', 'sets', 'set-form'].includes(currentView);
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 h-20 bg-dark-surface/80 backdrop-blur-lg border-t border-white/10 z-50">
@@ -56,7 +57,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, setView }) => {
         <NavButton
           label="Exercises"
           icon={<DumbbellIcon className="w-6 h-6" />}
-          isActive={currentView === 'exercises'}
+          isActive={isExerciseView}
           onClick={() => setView('exercises')}
         />
         <NavButton

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import type { DailyLog } from '../types';
+import type { DailyLog, WorkoutActivity } from '../types';
 import { ActivityType } from '../types';
-import { FilterIcon, DumbbellIcon, ForkKnifeIcon, MoonIcon } from '../constants';
+import { FilterIcon, DumbbellIcon, ForkKnifeIcon, MoonIcon, TrashIcon } from '../constants';
 
 interface HistoryViewProps {
   logs: DailyLog[];
   filters: { dateFrom: string; dateTo: string; activityTypes: ActivityType[] };
   setFilters: React.Dispatch<React.SetStateAction<{ dateFrom: string; dateTo: string; activityTypes: ActivityType[] }>>;
+  onUpdateLog: (updatedLog: DailyLog) => void;
 }
 
 const FilterModal: React.FC<{
@@ -63,13 +64,31 @@ const FilterModal: React.FC<{
     );
 };
 
-const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters }) => {
+const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters, onUpdateLog }) => {
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
     const formatDate = (dateString: string) => {
         const date = new Date(`${dateString}T00:00:00`);
         return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }
+    
+    const handleDeleteSleep = (log: DailyLog) => {
+        if (window.confirm("Are you sure you want to remove the sleep log for this day?")) {
+            onUpdateLog({ ...log, sleep: null });
+        }
+    };
+    
+    const handleDeleteNutrition = (log: DailyLog) => {
+        if (window.confirm("Are you sure you want to remove the nutrition log for this day?")) {
+            onUpdateLog({ ...log, nutrition: null });
+        }
+    };
+    
+    const handleDeleteWorkout = (log: DailyLog, workoutId: string) => {
+        if (window.confirm("Are you sure you want to remove this workout?")) {
+            onUpdateLog({ ...log, workouts: log.workouts.filter(w => w.id !== workoutId) });
+        }
+    };
 
     return (
         <div className="space-y-4">
@@ -79,14 +98,17 @@ const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters }) 
                         <h3 className="font-bold text-white mb-3">{formatDate(log.date)}</h3>
                         <div className="space-y-3">
                              {log.sleep && (
-                                <div className="bg-dark-card p-3 rounded-md">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <MoonIcon className="w-5 h-5 text-blue-400" />
-                                        <h4 className="font-semibold text-dark-text">Sleep</h4>
+                                <div className="bg-dark-card p-3 rounded-md flex items-start justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <MoonIcon className="w-5 h-5 text-blue-400" />
+                                            <h4 className="font-semibold text-dark-text">Sleep</h4>
+                                        </div>
+                                        <p className="text-sm text-dark-text-secondary pl-7">
+                                            {log.sleep.durationHours} hours
+                                        </p>
                                     </div>
-                                    <p className="text-sm text-dark-text-secondary pl-2">
-                                        {log.sleep.durationHours} hours
-                                    </p>
+                                    <button onClick={() => handleDeleteSleep(log)} className="text-dark-text-secondary hover:text-red-500 p-1"><TrashIcon className="w-4 h-4" /></button>
                                 </div>
                             )}
                             {log.workouts.length > 0 && (
@@ -95,20 +117,28 @@ const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters }) 
                                         <DumbbellIcon className="w-5 h-5 text-brand-secondary" />
                                         <h4 className="font-semibold text-dark-text">Workouts</h4>
                                     </div>
-                                    <ul className="space-y-1 text-sm text-dark-text-secondary pl-2">
-                                        {log.workouts.map(w => <li key={w.id}>- {w.name}</li>)}
+                                    <ul className="space-y-2 text-sm text-dark-text-secondary pl-7">
+                                        {log.workouts.map(w => (
+                                            <li key={w.id} className="flex justify-between items-center">
+                                                - {w.name}
+                                                <button onClick={() => handleDeleteWorkout(log, w.id)} className="text-dark-text-secondary hover:text-red-500 p-1"><TrashIcon className="w-4 h-4" /></button>
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             )}
                             {log.nutrition && (
-                                <div className="bg-dark-card p-3 rounded-md">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <ForkKnifeIcon className="w-5 h-5 text-brand-primary" />
-                                        <h4 className="font-semibold text-dark-text">Nutrition</h4>
+                                <div className="bg-dark-card p-3 rounded-md flex items-start justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <ForkKnifeIcon className="w-5 h-5 text-brand-primary" />
+                                            <h4 className="font-semibold text-dark-text">Nutrition</h4>
+                                        </div>
+                                        <p className="text-sm text-dark-text-secondary pl-7">
+                                            {log.nutrition.calories} kcal, {log.nutrition.protein}g P, {log.nutrition.carbs}g C, {log.nutrition.fats}g F
+                                        </p>
                                     </div>
-                                    <p className="text-sm text-dark-text-secondary pl-2">
-                                        {log.nutrition.calories} kcal, {log.nutrition.protein}g P, {log.nutrition.carbs}g C, {log.nutrition.fats}g F
-                                    </p>
+                                    <button onClick={() => handleDeleteNutrition(log)} className="text-dark-text-secondary hover:text-red-500 p-1"><TrashIcon className="w-4 h-4" /></button>
                                 </div>
                             )}
                         </div>

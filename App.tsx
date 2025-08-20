@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn } from './types';
+import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet } from './types';
 import { ActivityType } from './types';
 import BottomNav from './components/BottomNav';
 import WorkoutLogger from './components/WorkoutLogger';
@@ -15,6 +15,9 @@ import SleepLogger from './components/SleepLogger';
 import CheckInFormView from './components/CheckInFormView';
 import CheckInsView from './components/CheckInsView';
 import CheckInDetailView from './components/CheckInDetailView';
+import ExerciseHubView from './components/ExerciseHubView';
+import SetsListView from './components/SetsListView';
+import SetFormView from './components/SetFormView';
 import { UserCircleIcon, ChevronLeftIcon } from './constants';
 
 const initialSettings: UserSettings = { 
@@ -44,9 +47,11 @@ function App() {
   const [customExercises, setCustomExercises] = useLocalStorage<CustomExercise[]>('fitai-exercises', []);
   const [userSettings, setUserSettings] = useLocalStorage<UserSettings>('fitai-settings', initialSettings);
   const [checkIns, setCheckIns] = useLocalStorage<CheckIn[]>('fitai-checkins', []);
+  const [exerciseSets, setExerciseSets] = useLocalStorage<ExerciseSet[]>('fitai-sets', []);
   
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const [selectedCheckInId, setSelectedCheckInId] = useState<string | null>(null);
+  const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
   
   const setView = (newView: View, options?: { replace?: boolean }) => {
     setViewHistory(prev => {
@@ -98,6 +103,22 @@ function App() {
     }
   };
 
+  const handleSaveSet = (set: ExerciseSet | Omit<ExerciseSet, 'id'>) => {
+    if ('id' in set) {
+        setExerciseSets(prev => prev.map(s => s.id === set.id ? set : s).sort((a,b) => a.name.localeCompare(b.name)));
+    } else {
+        const newSet: ExerciseSet = { ...set, id: new Date().toISOString() };
+        setExerciseSets(prev => [...prev, newSet].sort((a,b) => a.name.localeCompare(b.name)));
+    }
+    goBack();
+  };
+
+  const handleDeleteSet = (id: string) => {
+      if (window.confirm("Are you sure you want to delete this set?")) {
+          setExerciseSets(prev => prev.filter(s => s.id !== id));
+      }
+  };
+
 
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
@@ -117,6 +138,7 @@ function App() {
     setCustomExercises(data.customExercises);
     setUserSettings(data.userSettings);
     setCheckIns(data.checkIns || []);
+    setExerciseSets(data.exerciseSets || []);
   }
 
   const renderView = () => {
@@ -129,19 +151,26 @@ function App() {
       case 'calendar':
         return <CalendarView logs={logs} checkIns={checkIns} setSelectedDate={setSelectedDate} setView={setView} setSelectedCheckInId={setSelectedCheckInId} />;
       case 'routine':
-        return <WorkoutLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} customExercises={customExercises} />;
+        return <WorkoutLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} customExercises={customExercises} allLogs={logs} exerciseSets={exerciseSets} />;
       case 'nutrition':
         return <NutritionLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} goBack={goBack} />;
       case 'sleep':
         return <SleepLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} goBack={goBack} />;
       case 'history':
-        return <HistoryView logs={filteredLogs} filters={historyFilters} setFilters={setHistoryFilters} />;
+        return <HistoryView logs={filteredLogs} filters={historyFilters} setFilters={setHistoryFilters} onUpdateLog={updateLogForDate}/>;
       case 'exercises':
+        return <ExerciseHubView setView={setView} />;
+      case 'exercise-library':
         return <ExerciseLibrary exercises={customExercises} setExercises={setCustomExercises} />;
+      case 'sets':
+        return <SetsListView sets={exerciseSets} setView={setView} setSelectedSetId={setSelectedSetId} onDelete={handleDeleteSet} />;
+      case 'set-form':
+        const setToEdit = exerciseSets.find(s => s.id === selectedSetId);
+        return <SetFormView onSave={handleSaveSet} goBack={goBack} customExercises={customExercises} setToEdit={setToEdit} />;
       case 'analysis':
         return <AnalysisDashboard allLogs={logs} userSettings={userSettings} checkIns={checkIns} />;
       case 'settings':
-        const appData: AppData = { logs, customExercises, userSettings, checkIns };
+        const appData: AppData = { logs, customExercises, userSettings, checkIns, exerciseSets };
         return <SettingsView settings={userSettings} setSettings={setUserSettings} appData={appData} onImport={handleImportData} />;
       case 'check-in-form':
         const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
@@ -167,7 +196,10 @@ function App() {
             return isToday ? 'Today\'s Log' : date.toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' });
         case 'calendar': return 'Calendar';
         case 'history': return 'Log History';
-        case 'exercises': return 'Exercise Library';
+        case 'exercises': return 'Exercises & Sets';
+        case 'exercise-library': return 'Exercise Library';
+        case 'sets': return 'My Sets';
+        case 'set-form': return selectedSetId ? 'Edit Set' : 'Create Set';
         case 'analysis': return 'AI Analysis';
         case 'settings': return 'Settings';
         case 'check-ins': return 'Check-in History';

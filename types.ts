@@ -1,4 +1,4 @@
-export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'settings' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail';
+export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'settings' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail' | 'exercise-library' | 'sets' | 'set-form';
 
 export enum ActivityType {
   WeightLifting = 'WeightLifting',
@@ -61,6 +61,12 @@ export interface CustomExercise {
     name: string;
 }
 
+export interface ExerciseSet {
+    id: string;
+    name: string;
+    exerciseIds: string[]; // References CustomExercise['id']
+}
+
 export interface CheckIn {
   id: string;
   date: string; // YYYY-MM-DD
@@ -88,4 +94,5 @@ export interface AppData {
   customExercises: CustomExercise[];
   userSettings: UserSettings;
   checkIns: CheckIn[];
+  exerciseSets: ExerciseSet[];
 }
