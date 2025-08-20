@@ -124,7 +124,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelected
 
         days.push(
             <div key={day} onClick={() => handleDayClick(day)} className="relative w-full aspect-square flex flex-col items-center justify-center cursor-pointer rounded-lg hover:bg-dark-card transition-colors p-1">
-                {hasCheckIn && <CheckBadgeIcon className="absolute top-1 right-1 w-4 h-4 text-green-400" />}
+                {hasCheckIn && <CheckBadgeIcon className="absolute top-0.5 right-0.5 w-4 h-4 text-green-400" />}
                 <span className={`flex items-center justify-center rounded-full w-8 h-8 text-sm ${isToday ? 'bg-brand-primary text-dark-bg font-bold' : 'text-dark-text'}`}>
                     {day}
                 </span>
