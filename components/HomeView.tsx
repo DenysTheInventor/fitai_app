@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import type { DailyLog, View, CheckIn } from '../types';
-import { DumbbellIcon, ForkKnifeIcon, MoonIcon, ScaleIcon } from '../constants';
+import { DumbbellIcon, ForkKnifeIcon, MoonIcon } from '../constants';
+import NutritionChart from './NutritionChart';
 
 interface HomeViewProps {
     todayLog: DailyLog;
@@ -65,6 +66,30 @@ const HomeView: React.FC<HomeViewProps> = ({ todayLog, allLogs, setView, setSele
     const isMonday = new Date().getDay() === 1;
     const latestCheckIn = checkIns?.[0];
 
+    const [activeSlide, setActiveSlide] = useState(0);
+    const sliderRef = useRef<HTMLDivElement>(null);
+
+    const handleScroll = () => {
+        if (sliderRef.current) {
+            const scrollLeft = sliderRef.current.scrollLeft;
+            const slideWidth = sliderRef.current.clientWidth;
+            const newActiveSlide = Math.round(scrollLeft / slideWidth);
+            if (newActiveSlide !== activeSlide) {
+                setActiveSlide(newActiveSlide);
+            }
+        }
+    };
+
+    const scrollToSlide = (index: number) => {
+        if (sliderRef.current) {
+            const slideWidth = sliderRef.current.clientWidth;
+            sliderRef.current.scrollTo({
+                left: slideWidth * index,
+                behavior: 'smooth',
+            });
+        }
+    };
+
     const navigateToLogger = (view: 'routine' | 'nutrition' | 'sleep') => {
         setSelectedDate(today);
         setView(view);
@@ -118,81 +143,96 @@ const HomeView: React.FC<HomeViewProps> = ({ todayLog, allLogs, setView, setSele
             
             <div className="bg-gradient-to-br from-brand-secondary to-purple-800 p-6 rounded-xl flex items-center justify-between text-white shadow-lg">
                 <div>
-                    <p className="text-lg font-medium">Consistency Streak</p>
-                    <p className="text-sm opacity-80">Keep the flame alive!</p>
+                    <p className="text-lg font-medium">Cерия</p>
+                    <p className="text-sm opacity-80">Поддерживай свой прогресс!</p>
                 </div>
-                <div className="flex items-center gap-2">
-                     <span className="text-5xl font-bold">{streak}</span>
-                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-orange-400">
-                        <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071 1.052A9.75 9.75 0 0 1 12 12.75v7.5a.75.75 0 0 1-1.5 0v-7.5a9.75 9.75 0 0 1-1.071-1.052.75.75 0 0 0-1.071-1.052c-1.22.822-2.13 2.13-2.13 3.714v5.25a2.25 2.25 0 0 0 2.25 2.25h3a2.25 2.25 0 0 0 2.25-2.25v-5.25c0-1.584-.91-2.892-2.13-3.714Z" clipRule="evenodd" />
-                    </svg>
+                <div className="text-right">
+                    <p className="text-4xl font-bold">{streak}</p>
+                    <p className="text-sm opacity-80 -mt-1">дней подряд</p>
                 </div>
             </div>
             
             <CheckInCard />
             
-            <div className="bg-dark-surface p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-lg text-white">Today's Sleep</h3>
-                     <button onClick={() => navigateToLogger('sleep')} className="text-sm text-brand-primary font-semibold">Log Sleep</button>
-                </div>
-                 {todayLog.sleep ? (
-                    <div className="bg-dark-card p-3 rounded-md flex items-center gap-3">
-                        <MoonIcon className="w-5 h-5 text-blue-400" />
-                        <span className="text-dark-text text-sm font-medium">{todayLog.sleep.durationHours} hours</span>
+            <div className="relative pb-6">
+                 <div ref={sliderRef} className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide -mx-4 px-4" onScroll={handleScroll}>
+                    {/* Slide 1: Logs */}
+                    <div className="w-full flex-shrink-0 snap-center space-y-4 pr-4">
+                        <div className="bg-dark-surface p-4 rounded-lg">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-semibold text-lg text-white">Today's Sleep</h3>
+                                <button onClick={() => navigateToLogger('sleep')} className="text-sm text-brand-primary font-semibold">Log Sleep</button>
+                            </div>
+                            {todayLog.sleep ? (
+                                <div className="bg-dark-card p-3 rounded-md flex items-center gap-3">
+                                    <MoonIcon className="w-5 h-5 text-blue-400" />
+                                    <span className="text-dark-text text-sm font-medium">{todayLog.sleep.durationHours} hours</span>
+                                </div>
+                            ) : (
+                                <p className="text-center text-dark-text-secondary py-4 text-sm">No sleep logged for today.</p>
+                            )}
+                        </div>
+
+                        <div className="bg-dark-surface p-4 rounded-lg">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-semibold text-lg text-white">Today's Workout</h3>
+                                <button onClick={() => navigateToLogger('routine')} className="text-sm text-brand-primary font-semibold">Log Workout</button>
+                            </div>
+                            {todayLog.workouts.length > 0 ? (
+                                <ul className="space-y-2">
+                                    {todayLog.workouts.map(w => (
+                                    <li key={w.id} className="bg-dark-card p-3 rounded-md flex items-center gap-3">
+                                            <DumbbellIcon className="w-5 h-5 text-brand-secondary" />
+                                            <span className="text-dark-text text-sm font-medium">{w.name}</span>
+                                    </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-center text-dark-text-secondary py-4 text-sm">No workout logged for today.</p>
+                            )}
+                        </div>
+
+                        <div className="bg-dark-surface p-4 rounded-lg">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-semibold text-lg text-white">Today's Nutrition</h3>
+                                <button onClick={() => navigateToLogger('nutrition')} className="text-sm text-brand-primary font-semibold">Log Nutrition</button>
+                            </div>
+                            {todayLog.nutrition ? (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                                    <div className="bg-dark-card p-3 rounded-md">
+                                        <p className="font-bold text-xl text-brand-primary">{todayLog.nutrition.calories}</p>
+                                        <p className="text-xs text-dark-text-secondary">Calories</p>
+                                    </div>
+                                    <div className="bg-dark-card p-3 rounded-md">
+                                        <p className="font-bold text-xl text-white">{todayLog.nutrition.protein}g</p>
+                                        <p className="text-xs text-dark-text-secondary">Protein</p>
+                                    </div>
+                                    <div className="bg-dark-card p-3 rounded-md">
+                                        <p className="font-bold text-xl text-white">{todayLog.nutrition.carbs}g</p>
+                                        <p className="text-xs text-dark-text-secondary">Carbs</p>
+                                    </div>
+                                    <div className="bg-dark-card p-3 rounded-md">
+                                        <p className="font-bold text-xl text-white">{todayLog.nutrition.fats}g</p>
+                                        <p className="text-xs text-dark-text-secondary">Fats</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-center text-dark-text-secondary py-4 text-sm">No nutrition logged for today.</p>
+                            )}
+                        </div>
                     </div>
-                ) : (
-                    <p className="text-center text-dark-text-secondary py-4 text-sm">No sleep logged for today.</p>
-                )}
+                    {/* Slide 2: Chart */}
+                     <div className="w-full flex-shrink-0 snap-center pr-4">
+                        <NutritionChart logs={allLogs} />
+                    </div>
+                </div>
+
+                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-2">
+                    <button aria-label="Go to logs slide" onClick={() => scrollToSlide(0)} className={`w-2 h-2 rounded-full transition-colors ${activeSlide === 0 ? 'bg-brand-primary' : 'bg-dark-card'}`}></button>
+                    <button aria-label="Go to chart slide" onClick={() => scrollToSlide(1)} className={`w-2 h-2 rounded-full transition-colors ${activeSlide === 1 ? 'bg-brand-primary' : 'bg-dark-card'}`}></button>
+                </div>
             </div>
 
-            <div className="bg-dark-surface p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-lg text-white">Today's Workout</h3>
-                    <button onClick={() => navigateToLogger('routine')} className="text-sm text-brand-primary font-semibold">Log Workout</button>
-                </div>
-                {todayLog.workouts.length > 0 ? (
-                    <ul className="space-y-2">
-                        {todayLog.workouts.map(w => (
-                           <li key={w.id} className="bg-dark-card p-3 rounded-md flex items-center gap-3">
-                                <DumbbellIcon className="w-5 h-5 text-brand-secondary" />
-                                <span className="text-dark-text text-sm font-medium">{w.name}</span>
-                           </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-center text-dark-text-secondary py-4 text-sm">No workout logged for today.</p>
-                )}
-            </div>
-
-            <div className="bg-dark-surface p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-lg text-white">Today's Nutrition</h3>
-                    <button onClick={() => navigateToLogger('nutrition')} className="text-sm text-brand-primary font-semibold">Log Nutrition</button>
-                </div>
-                 {todayLog.nutrition ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                        <div className="bg-dark-card p-3 rounded-md">
-                            <p className="font-bold text-xl text-brand-primary">{todayLog.nutrition.calories}</p>
-                            <p className="text-xs text-dark-text-secondary">Calories</p>
-                        </div>
-                        <div className="bg-dark-card p-3 rounded-md">
-                            <p className="font-bold text-xl text-white">{todayLog.nutrition.protein}g</p>
-                            <p className="text-xs text-dark-text-secondary">Protein</p>
-                        </div>
-                        <div className="bg-dark-card p-3 rounded-md">
-                            <p className="font-bold text-xl text-white">{todayLog.nutrition.carbs}g</p>
-                            <p className="text-xs text-dark-text-secondary">Carbs</p>
-                        </div>
-                        <div className="bg-dark-card p-3 rounded-md">
-                            <p className="font-bold text-xl text-white">{todayLog.nutrition.fats}g</p>
-                            <p className="text-xs text-dark-text-secondary">Fats</p>
-                        </div>
-                    </div>
-                ) : (
-                    <p className="text-center text-dark-text-secondary py-4 text-sm">No nutrition logged for today.</p>
-                )}
-            </div>
         </div>
     );
 }

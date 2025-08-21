@@ -117,11 +117,20 @@ const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters, on
                                         <DumbbellIcon className="w-5 h-5 text-brand-secondary" />
                                         <h4 className="font-semibold text-dark-text">Workouts</h4>
                                     </div>
-                                    <ul className="space-y-2 text-sm text-dark-text-secondary pl-7">
+                                    <ul className="space-y-3 pl-2">
                                         {log.workouts.map(w => (
-                                            <li key={w.id} className="flex justify-between items-center">
-                                                - {w.name}
-                                                <button onClick={() => handleDeleteWorkout(log, w.id)} className="text-dark-text-secondary hover:text-red-500 p-1"><TrashIcon className="w-4 h-4" /></button>
+                                            <li key={w.id}>
+                                                <div className="flex justify-between items-start">
+                                                    <span className="font-medium text-dark-text">{w.name}</span>
+                                                    <button onClick={() => handleDeleteWorkout(log, w.id)} className="text-dark-text-secondary hover:text-red-500 p-1 -mt-1"><TrashIcon className="w-4 h-4" /></button>
+                                                </div>
+                                                {w.type === ActivityType.WeightLifting && (
+                                                    <ul className="text-xs list-disc list-inside ml-2 mt-1 text-dark-text-secondary">
+                                                        {w.sets.map((s, i) => <li key={i}>{s.reps} reps @ {s.weight} kg</li>)}
+                                                    </ul>
+                                                )}
+                                                {w.type === ActivityType.Cardio && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.steps} steps</p>}
+                                                {w.type === ActivityType.Sport && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.durationMinutes} minutes</p>}
                                             </li>
                                         ))}
                                     </ul>
