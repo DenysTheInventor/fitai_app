@@ -18,50 +18,8 @@ const getLocalDateString = (d = new Date()): string => {
   return `${year}-${month}-${day}`;
 };
 
-const calculateStreak = (logs: DailyLog[]): number => {
-    if (logs.length === 0) return 0;
-    
-    const activityDates = new Set(
-      logs
-        .filter(log => log.workouts.length > 0 || log.nutrition !== null || log.sleep !== null)
-        .map(log => log.date)
-    );
-    
-    if (activityDates.size === 0) return 0;
-
-    const sortedDates = Array.from(activityDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const mostRecentLogDate = new Date(sortedDates[0]);
-    mostRecentLogDate.setHours(0,0,0,0);
-    
-    const diffDays = (today.getTime() - mostRecentLogDate.getTime()) / (1000 * 3600 * 24);
-    
-    if (diffDays > 1) return 0;
-
-    let streak = 0;
-    if (diffDays <= 1) {
-        streak = 1;
-        for (let i = 0; i < sortedDates.length - 1; i++) {
-            const currentLog = new Date(sortedDates[i]);
-            const previousLog = new Date(sortedDates[i + 1]);
-            const dayDiff = (currentLog.getTime() - previousLog.getTime()) / (1000 * 3600 * 24);
-            if (dayDiff === 1) {
-                streak++;
-            } else {
-                break;
-            }
-        }
-    }
-    
-    return streak;
-}
-
-
 const HomeView: React.FC<HomeViewProps> = ({ todayLog, allLogs, setView, setSelectedDate, checkIns }) => {
     
-    const streak = calculateStreak(allLogs);
     const today = getLocalDateString();
     const isMonday = new Date().getDay() === 1;
     const latestCheckIn = checkIns?.[0];
@@ -140,17 +98,6 @@ const HomeView: React.FC<HomeViewProps> = ({ todayLog, allLogs, setView, setSele
 
     return (
         <div className="space-y-6">
-            
-            <div className="bg-gradient-to-br from-brand-secondary to-purple-800 p-6 rounded-xl flex items-center justify-between text-white shadow-lg">
-                <div>
-                    <p className="text-lg font-medium">Cерия</p>
-                    <p className="text-sm opacity-80">Поддерживай свой прогресс!</p>
-                </div>
-                <div className="text-right">
-                    <p className="text-4xl font-bold">{streak}</p>
-                    <p className="text-sm opacity-80 -mt-1">дней подряд</p>
-                </div>
-            </div>
             
             <CheckInCard />
             
