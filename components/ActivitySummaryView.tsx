@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import L from 'leaflet';
 import type { OutdoorRunActivity } from '../types';
 
@@ -28,7 +28,7 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (mapContainerRef.current && !mapRef.current && activity?.route && activity.route.length > 0) {
       const map = L.map(mapContainerRef.current, {
         zoomControl: false,
@@ -71,10 +71,14 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
   const activityDate = new Date(activity.id);
 
   return (
-    <div className="h-full w-full flex flex-col">
-      <div className="flex-shrink-0 h-1/3" ref={mapContainerRef} id="summary-map-container"></div>
+    <div className="relative h-full w-full">
+      <div 
+        id="summary-map-container"
+        ref={mapContainerRef} 
+        className="absolute top-0 left-0 right-0 h-1/3 z-0"
+      ></div>
       
-      <div className="flex-grow p-4 space-y-4 overflow-y-auto">
+      <div className="absolute top-1/3 bottom-0 left-0 right-0 overflow-y-auto p-4 space-y-4">
         <div className="bg-dark-surface p-4 rounded-lg">
             <p className="text-dark-text-secondary text-sm">{activityDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             <h2 className="text-2xl font-bold text-white">{activity.name}</h2>

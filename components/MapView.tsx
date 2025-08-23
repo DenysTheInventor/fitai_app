@@ -147,14 +147,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             
             {/* Stats Panel */}
             <div className="absolute top-0 left-0 right-0 p-4 z-10">
-                <div className="relative bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
-                    <button 
-                        onClick={() => setMapTheme(prev => prev === 'dark' ? 'light' : 'dark')}
-                        className="absolute top-2 right-2 p-1 rounded-full text-dark-text-secondary hover:bg-dark-card hover:text-white transition-colors"
-                        aria-label="Toggle map theme"
-                    >
-                        <SunIcon className="w-5 h-5" />
-                    </button>
+                <div className="bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
                     <div>
                         <p className="text-xs text-dark-text-secondary">DISTANCE (KM)</p>
                         <p className="text-2xl font-bold text-white">{stats.distanceKm.toFixed(2)}</p>
@@ -170,10 +163,21 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
                 </div>
             </div>
             
+            {/* Map Overlays (like the theme button) */}
+            <div className="absolute top-28 left-4 z-10">
+                 <button 
+                    onClick={() => setMapTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+                    className="bg-dark-surface/80 backdrop-blur-md w-10 h-10 flex items-center justify-center rounded-full text-dark-text-secondary hover:bg-dark-card hover:text-white transition-colors"
+                    aria-label="Toggle map theme"
+                >
+                    <SunIcon className="w-6 h-6" />
+                </button>
+            </div>
+
             {error && <div className="absolute top-24 left-4 right-4 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
 
             {/* Controls */}
-            <div className="absolute bottom-8 left-0 right-0 z-[1000] flex justify-around items-center">
+            <div className="absolute bottom-24 left-0 right-0 z-[1000] flex justify-around items-center">
                  {!isTracking ? (
                     <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
                         START
