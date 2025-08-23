@@ -39,20 +39,46 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
     } = useLocationTracker();
 
     useLayoutEffect(() => {
+        console.log("[MapView] useLayoutEffect triggered.");
+
         if (mapContainerRef.current && !mapRef.current) {
-            const map = L.map(mapContainerRef.current, { zoomControl: false }).setView([51.505, -0.09], 13);
+            console.log("[MapView] Map container ref is available. Proceeding with initialization.");
+            
+            const container = mapContainerRef.current;
+            console.log(`[MapView] Container dimensions: width=${container.clientWidth}, height=${container.clientHeight}`);
+
+            if (container.clientHeight === 0) {
+                 console.error("[MapView] CRITICAL: Map container height is 0. Map will not render correctly.");
+            }
+
+            console.log("[MapView] Initializing L.map...");
+            const map = L.map(container, { zoomControl: false }).setView([51.505, -0.09], 13);
+            console.log("[MapView] L.map initialized.");
+
+            console.log("[MapView] Adding tile layer...");
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(map);
+            console.log("[MapView] Tile layer added.");
+
             mapRef.current = map;
-            
+            console.log("[MapView] Map instance stored in ref.");
+
             map.locate({ setView: true, maxZoom: 16, watch: false });
             
             setTimeout(() => {
+                console.log("[MapView] Calling invalidateSize() after timeout.");
                 map.invalidateSize();
             }, 100);
+        } else {
+            if (!mapContainerRef.current) {
+                console.warn("[MapView] Map container ref is NOT available yet.");
+            }
+            if (mapRef.current) {
+                console.log("[MapView] Map is already initialized. Skipping.");
+            }
         }
     }, []);
 
