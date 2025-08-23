@@ -1,10 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
-import type { DailyLog, UserSettings, WorkoutActivity, CheckIn } from "../types";
+import type { DailyLog, UserSettings, CheckIn } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 function formatDataForPrompt(logs: DailyLog[], settings: UserSettings, checkIns: CheckIn[]): string {
-    let formattedString = "Here is the user's profile and their activity log data:\n\n";
+    let formattedString = "Here is the user's profile and their data:\n\n";
 
     // Add user profile information
     formattedString += "--- User Profile ---\n";
@@ -19,59 +19,64 @@ function formatDataForPrompt(logs: DailyLog[], settings: UserSettings, checkIns:
     }
     if (settings.bio) formattedString += `Bio: ${settings.bio}\n`;
     formattedString += "\n";
-    
 
     if (logs.length === 0 && checkIns.length === 0) {
-        return formattedString + "No activity or check-in data available for the selected period.";
+        return formattedString + "No activity or check-in data available.";
     }
 
-    const logDates = new Set(logs.map(l => l.date));
-    const checkInsForPeriod = checkIns.filter(ci => logDates.has(ci.date));
-
-    if (checkInsForPeriod.length > 0) {
-        formattedString += "--- Body Measurements & Check-ins ---\n";
-        const sortedCheckIns = [...checkInsForPeriod].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Add the full history of check-ins to show trends over time
+    if (checkIns.length > 0) {
+        formattedString += "--- Body Measurement History (All Check-ins) ---\n";
+        const sortedCheckIns = [...checkIns].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         sortedCheckIns.forEach(ci => {
-            formattedString += `Date: ${ci.date} - Weight: ${ci.weight}kg, Waist: ${ci.waist}cm, Chest: ${ci.chest}cm\n`;
+            formattedString += `Date: ${ci.date} -> Weight: ${ci.weight}kg, Waist: ${ci.waist}cm, Chest: ${ci.chest}cm\n`;
         });
         formattedString += "\n";
     }
     
-    formattedString += "--- Activity Logs ---\n";
-    const sortedLogs = [...logs].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Add activity logs for the selected period
+    if (logs.length > 0) {
+        formattedString += "--- Activity Logs (for the selected period) ---\n";
+        const sortedLogs = [...logs].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    sortedLogs.forEach(log => {
-        formattedString += `--- Date: ${log.date} ---\n`;
-        
-        if (log.sleep) {
-            formattedString += `Sleep: ${log.sleep.durationHours} hours\n`;
-        } else {
-            formattedString += "Sleep: Not logged.\n";
-        }
+        sortedLogs.forEach(log => {
+            formattedString += `--- Date: ${log.date} ---\n`;
+            
+            if (log.sleep) {
+                formattedString += `Sleep: ${log.sleep.durationHours} hours\n`;
+            } else {
+                formattedString += "Sleep: Not logged.\n";
+            }
 
-        if (log.nutrition) {
-            formattedString += `Nutrition: ${log.nutrition.calories}kcal, ${log.nutrition.protein}g P, ${log.nutrition.carbs}g C, ${log.nutrition.fats}g F, ${log.nutrition.sugar}g Sugar\n`;
-        } else {
-            formattedString += "Nutrition: Not logged.\n";
-        }
+            if (log.nutrition) {
+                formattedString += `Nutrition: ${log.nutrition.calories}kcal, ${log.nutrition.protein}g P, ${log.nutrition.carbs}g C, ${log.nutrition.fats}g F, ${log.nutrition.sugar}g Sugar\n`;
+            } else {
+                formattedString += "Nutrition: Not logged.\n";
+            }
 
-        if (log.workouts.length > 0) {
-            formattedString += "Workouts:\n";
-            log.workouts.forEach(workout => {
-                if (workout.type === 'WeightLifting') {
-                    const sets = workout.sets.map(s => `${s.reps} reps at ${s.weight}kg`).join(', ');
-                    formattedString += `- ${workout.name}: ${sets}\n`;
-                } else if (workout.type === 'Cardio') {
-                    formattedString += `- ${workout.name}: ${workout.steps} steps\n`;
-                } else if (workout.type === 'Sport') {
-                    formattedString += `- ${workout.name}: ${workout.durationMinutes} minutes\n`;
-                }
-            });
-        } else {
-            formattedString += "Workouts: No workout logged.\n";
-        }
-        formattedString += "\n";
-    });
+            if (log.workouts.length > 0) {
+                formattedString += "Workouts:\n";
+                log.workouts.forEach(workout => {
+                    if (workout.type === 'WeightLifting') {
+                        const sets = workout.sets.map(s => `${s.reps} reps at ${s.weight}kg`).join(', ');
+                        formattedString += `- ${workout.name}: ${sets}\n`;
+                    } else if (workout.type === 'Cardio') {
+                        formattedString += `- ${workout.name}: ${workout.steps} steps\n`;
+                    } else if (workout.type === 'Sport') {
+                        formattedString += `- ${workout.name}: ${workout.durationMinutes} minutes\n`;
+                    } else if (workout.type === 'OutdoorRun') {
+                         formattedString += `- ${workout.name}: ${workout.distanceKm.toFixed(2)} km in ${Math.round(workout.durationSeconds / 60)} minutes\n`;
+                    }
+                });
+            } else {
+                formattedString += "Workouts: No workout logged.\n";
+            }
+            formattedString += "\n";
+        });
+    } else {
+         formattedString += "--- Activity Logs ---\nNo activity logged for the selected period.\n";
+    }
+
 
     return formattedString;
 }
@@ -82,7 +87,7 @@ export const getAiAnalysis = async (logs: DailyLog[], settings: UserSettings, ch
         Ты — экспертный тренер по фитнесу и питанию по имени FitAI.
         Пользователь запросил анализ своих данных за следующий период: **${periodDescription}**.
         
-        Проанализируй следующие данные пользователя, которые включают его личный профиль, измерения тела и журналы активности за указанный период.
+        Проанализируй следующие данные пользователя. Они включают: личный профиль, полную историю измерений тела и журналы активности за указанный период.
 
         ${dataPrompt}
 

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.14.0",
+    "leaflet": "^1.9.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
