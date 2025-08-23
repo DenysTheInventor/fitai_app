@@ -131,6 +131,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters, on
                                                 )}
                                                 {w.type === ActivityType.Cardio && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.steps} steps</p>}
                                                 {w.type === ActivityType.Sport && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.durationMinutes} minutes</p>}
+                                                {w.type === ActivityType.OutdoorRun && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.distanceKm} km in {Math.round(w.durationSeconds / 60)} mins</p>}
                                             </li>
                                         ))}
                                     </ul>

@@ -18,6 +18,7 @@ import CheckInDetailView from './components/CheckInDetailView';
 import ExerciseHubView from './components/ExerciseHubView';
 import SetsListView from './components/SetsListView';
 import SetFormView from './components/SetFormView';
+import MapView from './components/MapView';
 import { UserCircleIcon, ChevronLeftIcon } from './constants';
 
 const initialSettings: UserSettings = { 
@@ -172,6 +173,8 @@ function App() {
       case 'settings':
         const appData: AppData = { logs, customExercises, userSettings, checkIns, exerciseSets };
         return <SettingsView settings={userSettings} setSettings={setUserSettings} appData={appData} onImport={handleImportData} />;
+      case 'tracking':
+        return <MapView selectedDateLog={getLogForDate(today)} onUpdateLog={updateLogForDate} />;
       case 'check-in-form':
         const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
         return <CheckInFormView onSave={handleSaveCheckIn} goBack={goBack} date={selectedDate} checkInToEdit={checkInToEdit} />;
@@ -202,6 +205,7 @@ function App() {
         case 'set-form': return selectedSetId ? 'Edit Set' : 'Create Set';
         case 'analysis': return 'AI Analysis';
         case 'settings': return 'Settings';
+        case 'tracking': return 'Start Activity';
         case 'check-ins': return 'Check-in History';
         case 'check-in-form':
             const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
@@ -215,7 +219,7 @@ function App() {
     }
   }
   
-  const mainViews: View[] = ['home', 'calendar', 'history', 'exercises', 'analysis'];
+  const mainViews: View[] = ['home', 'calendar', 'tracking', 'exercises', 'analysis'];
   const showBackButton = !mainViews.includes(view);
   const showProfileButton = !showBackButton;
 
@@ -245,7 +249,7 @@ function App() {
          </div>
       </header>
       
-      <main className="flex-grow p-4 pb-28">
+      <main className={`flex-grow ${view === 'tracking' ? 'p-0 pb-20' : 'p-4 pb-28'}`}>
         {renderView()}
       </main>
       

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { View } from '../types';
-import { HomeIcon, CalendarIcon, ListBulletIcon, SparklesIcon, DumbbellIcon } from '../constants';
+import { HomeIcon, CalendarIcon, SparklesIcon, DumbbellIcon, RunningIcon } from '../constants';
 
 interface BottomNavProps {
   currentView: View;
@@ -30,7 +30,7 @@ const NavButton: React.FC<{
 
 
 const BottomNav: React.FC<BottomNavProps> = ({ currentView, setView }) => {
-  const isActivityView = currentView === 'routine' || currentView === 'nutrition';
+  const isActivityView = ['routine', 'nutrition', 'sleep'].includes(currentView);
   const isExerciseView = ['exercises', 'exercise-library', 'sets', 'set-form'].includes(currentView);
 
   return (
@@ -49,10 +49,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, setView }) => {
           onClick={() => setView('calendar')}
         />
          <NavButton
-          label="History"
-          icon={<ListBulletIcon className="w-6 h-6" />}
-          isActive={currentView === 'history'}
-          onClick={() => setView('history')}
+          label="Track"
+          icon={<RunningIcon className="w-7 h-7" />}
+          isActive={currentView === 'tracking'}
+          onClick={() => setView('tracking')}
         />
         <NavButton
           label="Exercises"

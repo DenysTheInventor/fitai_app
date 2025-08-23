@@ -1,9 +1,10 @@
-export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'settings' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail' | 'exercise-library' | 'sets' | 'set-form';
+export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'settings' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail' | 'exercise-library' | 'sets' | 'set-form' | 'tracking';
 
 export enum ActivityType {
   WeightLifting = 'WeightLifting',
   Cardio = 'Cardio',
   Sport = 'Sport',
+  OutdoorRun = 'OutdoorRun',
 }
 
 export type UserGoal = 'lose' | 'maintain' | 'gain';
@@ -35,7 +36,24 @@ export interface Sport {
   durationMinutes: number;
 }
 
-export type WorkoutActivity = Exercise | Cardio | Sport;
+export interface GPSPoint {
+  lat: number;
+  lng: number;
+  timestamp: number;
+  altitude: number | null;
+}
+
+export interface OutdoorRunActivity {
+  id: string;
+  name: string;
+  type: ActivityType.OutdoorRun;
+  durationSeconds: number;
+  distanceKm: number;
+  route: GPSPoint[];
+}
+
+
+export type WorkoutActivity = Exercise | Cardio | Sport | OutdoorRunActivity;
 
 export interface NutritionLog {
   calories: number;
