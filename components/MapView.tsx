@@ -152,9 +152,9 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
     };
 
     return (
-        <div className="h-full w-full flex flex-col">
+        <div className="absolute inset-0 flex flex-col">
             {/* Stats Panel */}
-            <div className="flex-shrink-0 p-4">
+            <div className="p-4 z-10 flex-shrink-0">
                 <div className="bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
                     <div>
                         <p className="text-xs text-dark-text-secondary">DISTANCE (KM)</p>
@@ -172,11 +172,9 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             </div>
 
             {/* Map Area */}
-            <div className="flex-grow relative">
-                {/* This is the actual container Leaflet will mount to. It fills its parent. */}
-                <div id="map-container" ref={mapContainerRef} className="w-full h-full"></div>
+            <div className="relative flex-grow">
+                <div id="map-container" ref={mapContainerRef} className="absolute inset-0"></div>
                 
-                {/* Overlays on the map */}
                 {error && <div className="absolute top-4 left-4 right-4 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
 
                 <div className="absolute bottom-4 left-0 right-0 z-[1000] flex justify-around items-center">
