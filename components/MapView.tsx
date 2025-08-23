@@ -127,13 +127,9 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
     };
 
     return (
-        <div className="h-full w-full relative">
-            {/* Map Container - fills the entire parent space */}
-            <div id="map-container" ref={mapContainerRef} className="absolute inset-0 z-0"></div>
-
-            {/* UI overlays */}
-            <div className="absolute top-0 left-0 right-0 z-10 p-4">
-                {/* Stats Display */}
+        <div className="h-full w-full flex flex-col">
+            {/* Stats Display */}
+            <div className="flex-shrink-0 p-4">
                 <div className="bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
                     <div>
                         <p className="text-xs text-dark-text-secondary">DISTANCE (KM)</p>
@@ -150,26 +146,32 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
                 </div>
             </div>
 
-            {/* Error Display */}
-            {error && <div className="absolute top-28 left-4 right-4 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-10 text-sm">{error}</div>}
+            {/* Map Area */}
+            <div className="flex-grow relative">
+                <div id="map-container" ref={mapContainerRef} className="absolute inset-0 z-0"></div>
 
-            {/* Control Buttons */}
-            <div className="absolute bottom-4 left-0 right-0 z-10 flex justify-around items-center">
-                 {!isTracking ? (
-                    <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
-                        START
-                    </button>
-                ) : (
-                    <>
-                       {!isPaused ? (
-                         <button onClick={pauseTracking} className="px-6 py-3 bg-yellow-600 rounded-full text-white font-semibold">PAUSE</button>
-                       ) : (
-                         <button onClick={resumeTracking} className="px-6 py-3 bg-green-600 rounded-full text-white font-semibold">RESUME</button>
-                       )}
-                       <button onClick={handleFinish} className="px-6 py-3 bg-red-600 rounded-full text-white font-semibold">FINISH</button>
-                    </>
-                )}
+                {/* Error Display */}
+                {error && <div className="absolute top-4 left-4 right-4 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-10 text-sm">{error}</div>}
+
+                {/* Control Buttons */}
+                <div className="absolute bottom-4 left-0 right-0 z-10 flex justify-around items-center">
+                     {!isTracking ? (
+                        <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
+                            START
+                        </button>
+                    ) : (
+                        <>
+                           {!isPaused ? (
+                             <button onClick={pauseTracking} className="px-6 py-3 bg-yellow-600 rounded-full text-white font-semibold">PAUSE</button>
+                           ) : (
+                             <button onClick={resumeTracking} className="px-6 py-3 bg-green-600 rounded-full text-white font-semibold">RESUME</button>
+                           )}
+                           <button onClick={handleFinish} className="px-6 py-3 bg-red-600 rounded-full text-white font-semibold">FINISH</button>
+                        </>
+                    )}
+                </div>
             </div>
+
 
             {/* Save Modal */}
             {isSaving && (
