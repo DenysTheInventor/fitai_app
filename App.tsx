@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet } from './types';
+import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet, OutdoorRunActivity } from './types';
 import { ActivityType } from './types';
 import BottomNav from './components/BottomNav';
 import WorkoutLogger from './components/WorkoutLogger';
@@ -19,6 +19,7 @@ import ExerciseHubView from './components/ExerciseHubView';
 import SetsListView from './components/SetsListView';
 import SetFormView from './components/SetFormView';
 import MapView from './components/MapView';
+import ActivitySummaryView from './components/ActivitySummaryView';
 import { UserCircleIcon, ChevronLeftIcon } from './constants';
 
 const initialSettings: UserSettings = { 
@@ -53,6 +54,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const [selectedCheckInId, setSelectedCheckInId] = useState<string | null>(null);
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   
   const setView = (newView: View, options?: { replace?: boolean }) => {
     setViewHistory(prev => {
@@ -159,7 +161,7 @@ function App() {
       case 'sleep':
         return <SleepLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} goBack={goBack} />;
       case 'history':
-        return <HistoryView logs={filteredLogs} filters={historyFilters} setFilters={setHistoryFilters} onUpdateLog={updateLogForDate}/>;
+        return <HistoryView logs={filteredLogs} filters={historyFilters} setFilters={setHistoryFilters} onUpdateLog={updateLogForDate} setView={setView} setSelectedActivityId={setSelectedActivityId} />;
       case 'exercises':
         return <ExerciseHubView setView={setView} />;
       case 'exercise-library':
@@ -178,7 +180,17 @@ function App() {
       case 'system-settings':
         return <SystemSettings settings={userSettings} setSettings={setUserSettings} appData={appData} onImport={handleImportData} />;
       case 'tracking':
-        return <MapView selectedDateLog={getLogForDate(today)} onUpdateLog={updateLogForDate} />;
+        return <MapView selectedDateLog={getLogForDate(today)} onUpdateLog={updateLogForDate} setView={setView} setSelectedActivityId={setSelectedActivityId}/>;
+      case 'activity-summary':
+        let selectedActivity: OutdoorRunActivity | undefined;
+        for (const log of logs) {
+            const found = log.workouts.find(w => w.id === selectedActivityId && w.type === ActivityType.OutdoorRun) as OutdoorRunActivity | undefined;
+            if (found) {
+                selectedActivity = found;
+                break;
+            }
+        }
+        return <ActivitySummaryView activity={selectedActivity} goBack={goBack} />;
       case 'check-in-form':
         const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
         return <CheckInFormView onSave={handleSaveCheckIn} goBack={goBack} date={selectedDate} checkInToEdit={checkInToEdit} />;
@@ -212,6 +224,7 @@ function App() {
         case 'profile-settings': return 'Profile Settings';
         case 'system-settings': return 'System Settings';
         case 'tracking': return 'Start Activity';
+        case 'activity-summary': return 'Activity Summary';
         case 'check-ins': return 'Check-in History';
         case 'check-in-form':
             const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
@@ -255,7 +268,7 @@ function App() {
          </div>
       </header>
       
-      <main className={`flex-grow ${view === 'tracking' ? 'p-0 pb-20' : 'p-4 pb-28'}`}>
+      <main className={`flex-grow ${view === 'tracking' || view === 'activity-summary' ? 'p-0 pb-20' : 'p-4 pb-28'}`}>
         {renderView()}
       </main>
       

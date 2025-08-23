@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { DailyLog, WorkoutActivity } from '../types';
+import type { DailyLog, View } from '../types';
 import { ActivityType } from '../types';
 import { FilterIcon, DumbbellIcon, ForkKnifeIcon, MoonIcon, TrashIcon } from '../constants';
 
@@ -8,6 +8,8 @@ interface HistoryViewProps {
   filters: { dateFrom: string; dateTo: string; activityTypes: ActivityType[] };
   setFilters: React.Dispatch<React.SetStateAction<{ dateFrom: string; dateTo: string; activityTypes: ActivityType[] }>>;
   onUpdateLog: (updatedLog: DailyLog) => void;
+  setView: (view: View) => void;
+  setSelectedActivityId: (id: string) => void;
 }
 
 const FilterModal: React.FC<{
@@ -64,7 +66,7 @@ const FilterModal: React.FC<{
     );
 };
 
-const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters, onUpdateLog }) => {
+const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters, onUpdateLog, setView, setSelectedActivityId }) => {
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
     const formatDate = (dateString: string) => {
@@ -88,6 +90,11 @@ const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters, on
         if (window.confirm("Are you sure you want to remove this workout?")) {
             onUpdateLog({ ...log, workouts: log.workouts.filter(w => w.id !== workoutId) });
         }
+    };
+    
+    const handleRunClick = (id: string) => {
+        setSelectedActivityId(id);
+        setView('activity-summary');
     };
 
     return (
@@ -118,22 +125,29 @@ const HistoryView: React.FC<HistoryViewProps> = ({ logs, filters, setFilters, on
                                         <h4 className="font-semibold text-dark-text">Workouts</h4>
                                     </div>
                                     <ul className="space-y-3 pl-2">
-                                        {log.workouts.map(w => (
-                                            <li key={w.id}>
-                                                <div className="flex justify-between items-start">
-                                                    <span className="font-medium text-dark-text">{w.name}</span>
-                                                    <button onClick={() => handleDeleteWorkout(log, w.id)} className="text-dark-text-secondary hover:text-red-500 p-1 -mt-1"><TrashIcon className="w-4 h-4" /></button>
-                                                </div>
-                                                {w.type === ActivityType.WeightLifting && (
-                                                    <ul className="text-xs list-disc list-inside ml-2 mt-1 text-dark-text-secondary">
-                                                        {w.sets.map((s, i) => <li key={i}>{s.reps} reps @ {s.weight} kg</li>)}
-                                                    </ul>
-                                                )}
-                                                {w.type === ActivityType.Cardio && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.steps} steps</p>}
-                                                {w.type === ActivityType.Sport && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.durationMinutes} minutes</p>}
-                                                {w.type === ActivityType.OutdoorRun && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.distanceKm} km in {Math.round(w.durationSeconds / 60)} mins</p>}
-                                            </li>
-                                        ))}
+                                        {log.workouts.map(w => {
+                                            const isClickableRun = w.type === ActivityType.OutdoorRun;
+                                            return (
+                                                <li 
+                                                    key={w.id} 
+                                                    onClick={isClickableRun ? () => handleRunClick(w.id) : undefined}
+                                                    className={isClickableRun ? 'cursor-pointer hover:bg-dark-bg rounded-md p-1 -m-1 transition-colors' : ''}
+                                                >
+                                                    <div className="flex justify-between items-start">
+                                                        <span className="font-medium text-dark-text">{w.name}</span>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkout(log, w.id); }} className="text-dark-text-secondary hover:text-red-500 p-1 -mt-1"><TrashIcon className="w-4 h-4" /></button>
+                                                    </div>
+                                                    {w.type === ActivityType.WeightLifting && (
+                                                        <ul className="text-xs list-disc list-inside ml-2 mt-1 text-dark-text-secondary">
+                                                            {w.sets.map((s, i) => <li key={i}>{s.reps} reps @ {s.weight} kg</li>)}
+                                                        </ul>
+                                                    )}
+                                                    {w.type === ActivityType.Cardio && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.steps} steps</p>}
+                                                    {w.type === ActivityType.Sport && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.durationMinutes} minutes</p>}
+                                                    {w.type === ActivityType.OutdoorRun && <p className="text-xs ml-2 mt-1 text-dark-text-secondary">{w.distanceKm} km in {Math.round(w.durationSeconds / 60)} mins</p>}
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
                                 </div>
                             )}

@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import type { DailyLog, OutdoorRunActivity } from '../types';
+import type { DailyLog, OutdoorRunActivity, View } from '../types';
 import { ActivityType } from '../types';
 import { useLocationTracker } from '../hooks/useLocationTracker';
 
 interface MapViewProps {
   selectedDateLog: DailyLog;
   onUpdateLog: (updatedLog: DailyLog) => void;
+  setView: (view: View) => void;
+  setSelectedActivityId: (id: string) => void;
 }
 
 const formatTime = (totalSeconds: number): string => {
@@ -23,8 +25,9 @@ const formatPace = (pace: number): string => {
     return `${minutes}:${seconds}`;
 }
 
-const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
+const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView, setSelectedActivityId }) => {
     const mapRef = useRef<L.Map | null>(null);
+    const mapContainerRef = useRef<HTMLDivElement>(null);
     const polylineRef = useRef<L.Polyline[]>([]);
     const userMarkerRef = useRef<L.Marker | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -36,8 +39,8 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
     } = useLocationTracker();
 
     useEffect(() => {
-        if (!mapRef.current) {
-            const map = L.map('map-container', { zoomControl: false }).setView([51.505, -0.09], 13);
+        if (mapContainerRef.current && !mapRef.current) {
+            const map = L.map(mapContainerRef.current, { zoomControl: false }).setView([51.505, -0.09], 13);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
@@ -46,6 +49,11 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
             mapRef.current = map;
             
             map.locate({ setView: true, maxZoom: 16, watch: false });
+            
+            // Invalidate size after a short delay to ensure container is sized
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
         }
     }, []);
 
@@ -80,8 +88,10 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
     }, [path, flatPath, isTracking, isPaused]);
 
     const handleFinish = () => {
-        setIsSaving(true);
-        stopTracking(false);
+        if (window.confirm("Are you sure you want to finish this activity?")) {
+            setIsSaving(true);
+            stopTracking(false);
+        }
     };
 
     const handleSave = () => {
@@ -101,7 +111,8 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
         };
         
         onUpdateLog({ ...selectedDateLog, workouts: [...selectedDateLog.workouts, newActivity] });
-        handleCancelSave();
+        setSelectedActivityId(newActivity.id);
+        setView('activity-summary');
     };
 
     const handleCancelSave = () => {
@@ -116,9 +127,12 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
     };
 
     return (
-        <div className="h-full w-full flex flex-col">
+        <div className="relative h-full w-full">
+            {/* Map Container */}
+            <div id="map-container" ref={mapContainerRef} className="absolute inset-0 z-0"></div>
+
             {/* Stats Display */}
-            <div className="p-4 z-10">
+            <div className="absolute top-0 left-0 right-0 p-4 z-10">
                 <div className="bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
                     <div>
                         <p className="text-xs text-dark-text-secondary">DISTANCE (KM)</p>
@@ -134,31 +148,26 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
                     </div>
                 </div>
             </div>
+            
+            {error && <div className="absolute top-2 left-2 right-2 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
 
-            {/* Map & Controls Container */}
-            <div className="flex-grow relative -mt-4 z-0">
-                <div id="map-container" className="absolute inset-0"></div>
-                
-                {error && <div className="absolute top-2 left-2 right-2 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
-
-                {/* Control Buttons */}
-                <div className="absolute bottom-4 left-0 right-0 z-[1000]">
-                    <div className="flex justify-around items-center">
-                        {!isTracking ? (
-                            <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
-                                START
-                            </button>
-                        ) : (
-                            <>
-                               {!isPaused ? (
-                                 <button onClick={pauseTracking} className="px-6 py-3 bg-yellow-600 rounded-full text-white font-semibold">PAUSE</button>
-                               ) : (
-                                 <button onClick={resumeTracking} className="px-6 py-3 bg-green-600 rounded-full text-white font-semibold">RESUME</button>
-                               )}
-                               <button onClick={handleFinish} className="px-6 py-3 bg-red-600 rounded-full text-white font-semibold">FINISH</button>
-                            </>
-                        )}
-                    </div>
+            {/* Control Buttons */}
+            <div className="absolute bottom-4 left-0 right-0 z-10">
+                <div className="flex justify-around items-center">
+                    {!isTracking ? (
+                        <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
+                            START
+                        </button>
+                    ) : (
+                        <>
+                           {!isPaused ? (
+                             <button onClick={pauseTracking} className="px-6 py-3 bg-yellow-600 rounded-full text-white font-semibold">PAUSE</button>
+                           ) : (
+                             <button onClick={resumeTracking} className="px-6 py-3 bg-green-600 rounded-full text-white font-semibold">RESUME</button>
+                           )}
+                           <button onClick={handleFinish} className="px-6 py-3 bg-red-600 rounded-full text-white font-semibold">FINISH</button>
+                        </>
+                    )}
                 </div>
             </div>
 
