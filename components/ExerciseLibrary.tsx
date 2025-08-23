@@ -1,14 +1,54 @@
-import React, { useState } from 'react';
-import type { CustomExercise } from '../types';
+import React, { useState, useMemo } from 'react';
+import type { CustomExercise, DailyLog, Set } from '../types';
 import { TrashIcon } from '../constants';
 
 interface ExerciseLibraryProps {
   exercises: CustomExercise[];
   setExercises: React.Dispatch<React.SetStateAction<CustomExercise[]>>;
+  allLogs: DailyLog[];
 }
 
-const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({ exercises, setExercises }) => {
+const ExerciseHistory: React.FC<{ exerciseName: string; allLogs: DailyLog[] }> = ({ exerciseName, allLogs }) => {
+    const performances = useMemo(() => {
+        const history: { date: string; sets: Set[] }[] = [];
+        const sortedLogs = [...allLogs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        sortedLogs.forEach(log => {
+            log.workouts.forEach(workout => {
+                if (workout.name === exerciseName && workout.type === 'WeightLifting') {
+                    history.push({ date: log.date, sets: workout.sets });
+                }
+            });
+        });
+        return history;
+    }, [exerciseName, allLogs]);
+
+    if (performances.length === 0) {
+        return <div className="p-4 border-t border-white/10 text-center text-sm text-dark-text-secondary">No performance history found.</div>;
+    }
+
+    return (
+        <div className="p-4 border-t border-white/10 space-y-3 max-h-60 overflow-y-auto">
+            {performances.map((perf, index) => (
+                <div key={index}>
+                    <p className="font-semibold text-sm text-dark-text">{new Date(perf.date + 'T00:00:00').toLocaleDateString()}</p>
+                    <ul className="text-xs list-disc list-inside ml-2 mt-1 text-dark-text-secondary">
+                        {perf.sets.map((set, i) => <li key={i}>{set.reps} reps @ {set.weight} kg</li>)}
+                    </ul>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+
+const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({ exercises, setExercises, allLogs }) => {
   const [newExerciseName, setNewExerciseName] = useState('');
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+
+  const handleToggleHistory = (id: string) => {
+    setExpandedExerciseId(prevId => (prevId === id ? null : id));
+  };
 
   const handleAddExercise = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,11 +89,28 @@ const ExerciseLibrary: React.FC<ExerciseLibraryProps> = ({ exercises, setExercis
       <div className="space-y-3">
         {exercises.length > 0 ? (
           exercises.map(ex => (
-            <div key={ex.id} className="bg-dark-card p-4 rounded-lg flex justify-between items-center">
-              <span className="font-medium text-dark-text">{ex.name}</span>
-              <button onClick={() => handleDeleteExercise(ex.id)} className="text-dark-text-secondary hover:text-red-500" aria-label={`Delete ${ex.name}`}>
-                <TrashIcon className="w-5 h-5" />
-              </button>
+            <div key={ex.id} className="bg-dark-card rounded-lg transition-shadow shadow-md hover:shadow-lg">
+              <div
+                  className="p-4 flex justify-between items-center cursor-pointer"
+                  onClick={() => handleToggleHistory(ex.id)}
+                  aria-expanded={expandedExerciseId === ex.id}
+                  aria-controls={`history-${ex.id}`}
+              >
+                  <span className="font-medium text-dark-text">{ex.name}</span>
+                  <div className="flex items-center gap-2">
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex.id); }} className="text-dark-text-secondary hover:text-red-500" aria-label={`Delete ${ex.name}`}>
+                          <TrashIcon className="w-5 h-5" />
+                      </button>
+                      <svg className={`w-5 h-5 text-dark-text-secondary transition-transform ${expandedExerciseId === ex.id ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                      </svg>
+                  </div>
+              </div>
+              {expandedExerciseId === ex.id && (
+                  <div id={`history-${ex.id}`}>
+                      <ExerciseHistory exerciseName={ex.name} allLogs={allLogs} />
+                  </div>
+              )}
             </div>
           ))
         ) : (

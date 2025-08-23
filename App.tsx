@@ -161,7 +161,7 @@ function App() {
       case 'exercises':
         return <ExerciseHubView setView={setView} />;
       case 'exercise-library':
-        return <ExerciseLibrary exercises={customExercises} setExercises={setCustomExercises} />;
+        return <ExerciseLibrary exercises={customExercises} setExercises={setCustomExercises} allLogs={logs} />;
       case 'sets':
         return <SetsListView sets={exerciseSets} setView={setView} setSelectedSetId={setSelectedSetId} onDelete={handleDeleteSet} />;
       case 'set-form':

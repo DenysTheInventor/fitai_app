@@ -38,8 +38,15 @@ const WorkoutCard: React.FC<{ activity: WorkoutActivity, onDelete: () => void }>
     );
 };
 
-const findLastPerformance = (exerciseName: string, allLogs: DailyLog[]): Set[] | null => {
-    const sortedLogs = [...allLogs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+const findLastPerformance = (exerciseName: string, allLogs: DailyLog[], currentDate: string): Set[] | null => {
+    const currentJsDate = new Date(currentDate + 'T00:00:00');
+    
+    // Filter logs to be strictly before the current date
+    const pastLogs = allLogs.filter(log => new Date(log.date + 'T00:00:00') < currentJsDate);
+
+    // Sort past logs in descending order to find the most recent one first
+    const sortedLogs = pastLogs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
     for (const log of sortedLogs) {
         for (const workout of log.workouts) {
             if (workout.name === exerciseName && workout.type === ActivityType.WeightLifting) {
@@ -57,7 +64,8 @@ const AddWorkoutModal: React.FC<{
     customExercises: CustomExercise[];
     allLogs: DailyLog[];
     exerciseSets: ExerciseSet[];
-}> = ({ onClose, onAdd, customExercises, allLogs, exerciseSets }) => {
+    selectedDate: string;
+}> = ({ onClose, onAdd, customExercises, allLogs, exerciseSets, selectedDate }) => {
     const [logMode, setLogMode] = useState<'single' | 'set'>('single');
     
     // State for single exercise
@@ -78,10 +86,10 @@ const AddWorkoutModal: React.FC<{
     
     const lastPerformance = useMemo(() => {
         if (logMode === 'single' && activityType === ActivityType.WeightLifting && name) {
-            return findLastPerformance(name, allLogs);
+            return findLastPerformance(name, allLogs, selectedDate);
         }
         return null;
-    }, [name, activityType, allLogs, logMode]);
+    }, [name, activityType, allLogs, logMode, selectedDate]);
 
     const handleSetSelection = (setId: string) => {
         setSelectedSetId(setId);
@@ -192,7 +200,7 @@ const AddWorkoutModal: React.FC<{
                         {selectedSet && exercisesInSet.map(ex => (
                             <div key={ex.id} className="bg-dark-card p-3 rounded-lg space-y-2">
                                 <h4 className="font-semibold text-white">{ex.name}</h4>
-                                <LastPerformanceHint perf={findLastPerformance(ex.name, allLogs)} />
+                                <LastPerformanceHint perf={findLastPerformance(ex.name, allLogs, selectedDate)} />
                                 {setPerformances[ex.id]?.map((set, i) => (
                                     <div key={i} className="flex gap-2">
                                         <input type="number" value={set.reps} onChange={e => updateSetPerformance(ex.id, i, 'reps', +e.target.value)} className="w-full bg-dark-surface border border-white/20 rounded-md p-2" placeholder="Reps" />
@@ -247,7 +255,7 @@ const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({ selectedDateLog, onUpdate
                 <PlusIcon className="w-8 h-8 text-white"/>
              </button>
 
-             {isModalOpen && <AddWorkoutModal onClose={() => setIsModalOpen(false)} onAdd={addActivity} customExercises={customExercises} allLogs={allLogs} exerciseSets={exerciseSets} />}
+             {isModalOpen && <AddWorkoutModal onClose={() => setIsModalOpen(false)} onAdd={addActivity} customExercises={customExercises} allLogs={allLogs} exerciseSets={exerciseSets} selectedDate={selectedDateLog.date} />}
         </div>
     );
 };
