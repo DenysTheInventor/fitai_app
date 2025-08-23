@@ -128,7 +128,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
     return (
         <div className="h-full w-full flex flex-col">
             {/* Stats Display */}
-            <div className="flex-shrink-0 p-4 z-10">
+            <div className="flex-shrink-0 p-4">
                 <div className="bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
                     <div>
                         <p className="text-xs text-dark-text-secondary">DISTANCE (KM)</p>
@@ -145,16 +145,16 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
                 </div>
             </div>
 
-            {/* Map and Controls Container */}
+            {/* Map Area */}
             <div className="relative flex-grow">
                 {/* Map Container */}
-                <div id="map-container" ref={mapContainerRef} className="absolute inset-0 z-0"></div>
+                <div id="map-container" ref={mapContainerRef} className="h-full w-full"></div>
 
                 {/* Error Display */}
                 {error && <div className="absolute top-2 left-2 right-2 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
 
                 {/* Control Buttons */}
-                <div className="absolute bottom-4 left-0 right-0 z-10">
+                <div className="absolute bottom-4 left-0 right-0 z-[1000]">
                     <div className="flex justify-around items-center">
                         {!isTracking ? (
                             <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
