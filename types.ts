@@ -1,4 +1,4 @@
-export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'settings' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail' | 'exercise-library' | 'sets' | 'set-form' | 'tracking';
+export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail' | 'exercise-library' | 'sets' | 'set-form' | 'tracking' | 'settings-hub' | 'profile-settings' | 'system-settings';
 
 export enum ActivityType {
   WeightLifting = 'WeightLifting',

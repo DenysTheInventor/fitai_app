@@ -9,7 +9,7 @@ import AnalysisDashboard from './components/AnalysisDashboard';
 import CalendarView from './components/CalendarView';
 import ExerciseLibrary from './components/ExerciseLibrary';
 import HistoryView from './components/HistoryView';
-import SettingsView from './components/SettingsView';
+import { SettingsHub, ProfileSettings, SystemSettings } from './components/SettingsView';
 import HomeView from './components/HomeView';
 import SleepLogger from './components/SleepLogger';
 import CheckInFormView from './components/CheckInFormView';
@@ -145,7 +145,8 @@ function App() {
   const renderView = () => {
     const today = getLocalDateString();
     const logForSelectedDate = getLogForDate(selectedDate);
-    
+    const appData: AppData = { logs, customExercises, userSettings, checkIns, exerciseSets };
+
     switch (view) {
       case 'home':
         return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} />;
@@ -170,9 +171,12 @@ function App() {
         return <SetFormView onSave={handleSaveSet} goBack={goBack} customExercises={customExercises} setToEdit={setToEdit} />;
       case 'analysis':
         return <AnalysisDashboard allLogs={logs} userSettings={userSettings} checkIns={checkIns} />;
-      case 'settings':
-        const appData: AppData = { logs, customExercises, userSettings, checkIns, exerciseSets };
-        return <SettingsView settings={userSettings} setSettings={setUserSettings} appData={appData} onImport={handleImportData} />;
+      case 'settings-hub':
+        return <SettingsHub setView={setView} />;
+      case 'profile-settings':
+        return <ProfileSettings settings={userSettings} setSettings={setUserSettings} />;
+      case 'system-settings':
+        return <SystemSettings settings={userSettings} setSettings={setUserSettings} appData={appData} onImport={handleImportData} />;
       case 'tracking':
         return <MapView selectedDateLog={getLogForDate(today)} onUpdateLog={updateLogForDate} />;
       case 'check-in-form':
@@ -204,7 +208,9 @@ function App() {
         case 'sets': return 'My Sets';
         case 'set-form': return selectedSetId ? 'Edit Set' : 'Create Set';
         case 'analysis': return 'AI Analysis';
-        case 'settings': return 'Settings';
+        case 'settings-hub': return 'Menu';
+        case 'profile-settings': return 'Profile Settings';
+        case 'system-settings': return 'System Settings';
         case 'tracking': return 'Start Activity';
         case 'check-ins': return 'Check-in History';
         case 'check-in-form':
@@ -237,7 +243,7 @@ function App() {
             <h1 className="text-xl font-bold text-dark-text">{getHeaderText()}</h1>
             <div className="w-10">
               {showProfileButton && (
-                <button onClick={() => setView('settings')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-dark-surface transition-colors" aria-label="Settings">
+                <button onClick={() => setView('settings-hub')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-dark-surface transition-colors" aria-label="Settings">
                     {userSettings.photo ? (
                         <img src={userSettings.photo} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
                     ) : (

@@ -37,8 +37,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
 
     useEffect(() => {
         if (!mapRef.current) {
-            // Initialize map
-            const map = L.map('map-container').setView([51.505, -0.09], 13);
+            const map = L.map('map-container', { zoomControl: false }).setView([51.505, -0.09], 13);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
@@ -46,7 +45,6 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
             }).addTo(map);
             mapRef.current = map;
             
-            // Get user's initial location
             map.locate({ setView: true, maxZoom: 16, watch: false });
         }
     }, []);
@@ -56,19 +54,17 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
             const latestPoint = flatPath[flatPath.length - 1];
             const latLng: L.LatLngTuple = [latestPoint.lat, latestPoint.lng];
 
-            // Update user marker
             if (!userMarkerRef.current) {
                 userMarkerRef.current = L.marker(latLng).addTo(mapRef.current);
             } else {
                 userMarkerRef.current.setLatLng(latLng);
             }
-            // Pan map to follow user
-            mapRef.current.panTo(latLng);
+            if (isTracking && !isPaused) {
+                mapRef.current.panTo(latLng);
+            }
         }
         
-        // Update polylines
         if (mapRef.current) {
-            // Clear existing polylines
             polylineRef.current.forEach(pl => pl.remove());
             polylineRef.current = [];
 
@@ -81,7 +77,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
             });
         }
 
-    }, [path, flatPath]);
+    }, [path, flatPath, isTracking, isPaused]);
 
     const handleFinish = () => {
         setIsSaving(true);
@@ -110,8 +106,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
 
     const handleCancelSave = () => {
         setIsSaving(false);
-        stopTracking(true); // reset everything
-        // Clear map artifacts
+        stopTracking(true);
         if (userMarkerRef.current) {
              userMarkerRef.current.remove();
              userMarkerRef.current = null;
@@ -121,13 +116,9 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
     };
 
     return (
-        <div className="h-full w-full flex flex-col relative">
-            <div id="map-container" className="flex-grow w-full h-full" style={{ minHeight: '300px' }}></div>
-            
-            {error && <div className="absolute top-2 left-2 right-2 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
-
-            <div className="absolute bottom-0 left-0 right-0 p-4 z-[1000] space-y-4">
-                 {/* Stats Display */}
+        <div className="h-full w-full flex flex-col">
+            {/* Stats Display */}
+            <div className="p-4 z-10">
                 <div className="bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
                     <div>
                         <p className="text-xs text-dark-text-secondary">DISTANCE (KM)</p>
@@ -142,29 +133,38 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog }) => {
                         <p className="text-2xl font-bold text-white">{formatPace(stats.paceMinPerKm)}</p>
                     </div>
                 </div>
+            </div>
+
+            {/* Map & Controls Container */}
+            <div className="flex-grow relative -mt-4 z-0">
+                <div id="map-container" className="absolute inset-0"></div>
+                
+                {error && <div className="absolute top-2 left-2 right-2 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
 
                 {/* Control Buttons */}
-                <div className="flex justify-around items-center">
-                    {!isTracking ? (
-                        <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
-                            START
-                        </button>
-                    ) : (
-                        <>
-                           {!isPaused ? (
-                             <button onClick={pauseTracking} className="px-6 py-3 bg-yellow-600 rounded-full text-white font-semibold">PAUSE</button>
-                           ) : (
-                             <button onClick={resumeTracking} className="px-6 py-3 bg-green-600 rounded-full text-white font-semibold">RESUME</button>
-                           )}
-                           <button onClick={handleFinish} className="px-6 py-3 bg-red-600 rounded-full text-white font-semibold">FINISH</button>
-                        </>
-                    )}
+                <div className="absolute bottom-4 left-0 right-0 z-[1000]">
+                    <div className="flex justify-around items-center">
+                        {!isTracking ? (
+                            <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
+                                START
+                            </button>
+                        ) : (
+                            <>
+                               {!isPaused ? (
+                                 <button onClick={pauseTracking} className="px-6 py-3 bg-yellow-600 rounded-full text-white font-semibold">PAUSE</button>
+                               ) : (
+                                 <button onClick={resumeTracking} className="px-6 py-3 bg-green-600 rounded-full text-white font-semibold">RESUME</button>
+                               )}
+                               <button onClick={handleFinish} className="px-6 py-3 bg-red-600 rounded-full text-white font-semibold">FINISH</button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Save Modal */}
             {isSaving && (
-                <div className="absolute inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
                     <div className="bg-dark-surface rounded-lg p-6 w-full max-w-sm shadow-xl space-y-4">
                         <h2 className="text-xl font-bold text-white">Save Activity</h2>
                         <div>
