@@ -71,14 +71,14 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
   const activityDate = new Date(activity.id);
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="absolute inset-0 flex flex-col">
       <div 
         id="summary-map-container"
         ref={mapContainerRef} 
-        className="w-full h-1/3 flex-shrink-0"
+        className="w-full h-1/3"
       ></div>
       
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div className="bg-dark-surface p-4 rounded-lg">
             <p className="text-dark-text-secondary text-sm">{activityDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             <h2 className="text-2xl font-bold text-white">{activity.name}</h2>
