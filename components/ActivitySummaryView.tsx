@@ -43,7 +43,7 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
       }).addTo(map);
 
       const latLngs = activity.route.map(p => [p.lat, p.lng] as L.LatLngTuple);
-      const polyline = L.polyline(latLngs, { color: '#00F5D4', weight: 4 }).addTo(map);
+      const polyline = L.polyline(latLngs, { color: '#16a34a', weight: 4 }).addTo(map);
       
       map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
       

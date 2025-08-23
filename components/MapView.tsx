@@ -1,8 +1,9 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import L from 'leaflet';
 import type { DailyLog, OutdoorRunActivity, View } from '../types';
 import { ActivityType } from '../types';
 import { useLocationTracker } from '../hooks/useLocationTracker';
+import { SunIcon } from '../constants';
 
 interface MapViewProps {
   selectedDateLog: DailyLog;
@@ -30,8 +31,10 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const polylineRef = useRef<L.Polyline[]>([]);
     const userMarkerRef = useRef<L.Marker | null>(null);
+    const tileLayerRef = useRef<L.TileLayer | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [activityName, setActivityName] = useState('Morning Run');
+    const [mapTheme, setMapTheme] = useState<'dark' | 'light'>('dark');
     
     const { 
         isTracking, isPaused, path, flatPath, stats, error, 
@@ -42,7 +45,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
         if (mapContainerRef.current && !mapRef.current) {
             const map = L.map(mapContainerRef.current, { zoomControl: false }).setView([51.505, -0.09], 13);
             
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
                 maxZoom: 20
@@ -59,6 +62,15 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             }, 100);
         }
     }, []);
+    
+    useEffect(() => {
+        if (tileLayerRef.current) {
+            const newUrl = mapTheme === 'dark'
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            tileLayerRef.current.setUrl(newUrl);
+        }
+    }, [mapTheme]);
 
     useLayoutEffect(() => {
         if (mapRef.current && flatPath.length > 0) {
@@ -82,7 +94,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             path.forEach(segment => {
                 if (segment.length > 1) {
                     const latLngs = segment.map(p => [p.lat, p.lng] as L.LatLngTuple);
-                    const newPolyline = L.polyline(latLngs, { color: '#00F5D4', weight: 4 }).addTo(mapRef.current!);
+                    const newPolyline = L.polyline(latLngs, { color: '#16a34a', weight: 4 }).addTo(mapRef.current!);
                     polylineRef.current.push(newPolyline);
                 }
             });
@@ -135,7 +147,14 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             
             {/* Stats Panel */}
             <div className="absolute top-0 left-0 right-0 p-4 z-10">
-                <div className="bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
+                <div className="relative bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
+                    <button 
+                        onClick={() => setMapTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+                        className="absolute top-2 right-2 p-1 rounded-full text-dark-text-secondary hover:bg-dark-card hover:text-white transition-colors"
+                        aria-label="Toggle map theme"
+                    >
+                        <SunIcon className="w-5 h-5" />
+                    </button>
                     <div>
                         <p className="text-xs text-dark-text-secondary">DISTANCE (KM)</p>
                         <p className="text-2xl font-bold text-white">{stats.distanceKm.toFixed(2)}</p>
@@ -154,7 +173,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             {error && <div className="absolute top-24 left-4 right-4 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
 
             {/* Controls */}
-            <div className="absolute bottom-4 left-0 right-0 z-[1000] flex justify-around items-center">
+            <div className="absolute bottom-8 left-0 right-0 z-[1000] flex justify-around items-center">
                  {!isTracking ? (
                     <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
                         START
