@@ -115,23 +115,23 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
                 </div>
            </div>
            <div style={{ width: '100%', height: '16.7%', backgroundColor: '#1E1E1E', color: 'white', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '10px', boxSizing: 'border-box' }}>
-               <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                 <p style={{ fontSize: '56px', fontWeight: 'bold', color: '#00F5D4', display: 'flex', alignItems: 'baseline', justifyContent: 'center', lineHeight: 1 }}>
+               <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                 <p style={{ fontSize: '56px', fontWeight: 'bold', color: '#00F5D4', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
                     <span>{activity.distanceKm.toFixed(2)}</span>
                     <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px', fontWeight: 'normal' }}>km</span>
                  </p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '12px' }}>DISTANCE</p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '16px' }}>DISTANCE</p>
                </div>
-               <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                 <p style={{ fontSize: '56px', fontWeight: 'bold', lineHeight: 1 }}>{formatTime(activity.durationSeconds)}</p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '12px' }}>TIME</p>
+               <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                 <p style={{ fontSize: '56px', fontWeight: 'bold' }}>{formatTime(activity.durationSeconds)}</p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '16px' }}>TIME</p>
                </div>
-               <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                 <p style={{ fontSize: '56px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline', justifyContent: 'center', lineHeight: 1 }}>
+               <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                 <p style={{ fontSize: '56px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
                     <span>{formatPace(pace)}</span>
                     <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px', fontWeight: 'normal' }}>/km</span>
                  </p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '12px' }}>PACE</p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '16px' }}>PACE</p>
                </div>
            </div>
         </div>
