@@ -26,7 +26,17 @@ const formatPace = (pace: number): string => {
     return `${minutes}:${seconds}`;
 }
 
-const APP_LOGO_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%239B5DE5'%3E%3Crect x='6' y='20' width='4' height='24' rx='1'/%3E%3Crect x='10' y='16' width='6' height='32' rx='1'/%3E%3Crect x='16' y='12' width='6' height='40' rx='1'/%3E%3Crect x='22' y='28' width='20' height='8' rx='2'/%3E%3Crect x='42' y='12' width='6' height='40' rx='1'/%3E%3Crect x='48' y='16' width='6' height='32' rx='1'/%3E%3Crect x='54' y='20' width='4' height='24' rx='1'/%3E%3C/svg%3E";
+const DumbbellIconForShare = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="#9B5DE5" style={{ width: '40px', height: '40px' }}>
+      <rect x="6" y="20" width="4" height="24" rx="1"/>
+      <rect x="10" y="16" width="6" height="32" rx="1"/>
+      <rect x="16" y="12" width="6" height="40" rx="1"/>
+      <rect x="22" y="28" width="20" height="8" rx="2"/>
+      <rect x="42" y="12" width="6" height="40" rx="1"/>
+      <rect x="48" y="16" width="6" height="32" rx="1"/>
+      <rect x="54" y="20" width="4" height="24" rx="1"/>
+    </svg>
+);
 
 const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => void; }> = ({ activity, onComplete }) => {
     const previewRef = useRef<HTMLDivElement>(null);
@@ -96,7 +106,7 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
               <div className="map-container-for-share" style={{ width: '100%', height: '100%' }}></div>
                <div style={{ position: 'absolute', top: '20px', left: '20px', backgroundColor: 'rgba(0, 0, 0, 0.6)', padding: '10px 15px', borderRadius: '12px', zIndex: 1000 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <img src={APP_LOGO_SVG} alt="logo" style={{ width: '40px', height: '40px' }} />
+                        <DumbbellIconForShare />
                         <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>FitAI Coach</span>
                     </div>
                     <p style={{ color: '#E0E0E0', fontSize: '16px', marginTop: '5px' }}>
@@ -107,21 +117,21 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
            <div style={{ width: '100%', height: '16.7%', backgroundColor: '#1E1E1E', color: 'white', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '10px', boxSizing: 'border-box' }}>
                <div style={{ textAlign: 'center' }}>
                  <p style={{ fontSize: '56px', fontWeight: 'bold', color: '#00F5D4', display: 'flex', alignItems: 'baseline', justifyContent: 'center', lineHeight: 1 }}>
-                    {activity.distanceKm.toFixed(2)}
-                    <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px' }}>km</span>
+                    <span>{activity.distanceKm.toFixed(2)}</span>
+                    <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px', fontWeight: 'normal' }}>km</span>
                  </p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '4px' }}>DISTANCE</p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '8px' }}>DISTANCE</p>
                </div>
                <div style={{ textAlign: 'center' }}>
                  <p style={{ fontSize: '56px', fontWeight: 'bold', lineHeight: 1 }}>{formatTime(activity.durationSeconds)}</p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '4px' }}>TIME</p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '8px' }}>TIME</p>
                </div>
                <div style={{ textAlign: 'center' }}>
                  <p style={{ fontSize: '56px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline', justifyContent: 'center', lineHeight: 1 }}>
-                    {formatPace(pace)}
-                    <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px' }}>/km</span>
+                    <span>{formatPace(pace)}</span>
+                    <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px', fontWeight: 'normal' }}>/km</span>
                  </p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '4px' }}>PACE</p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '8px' }}>PACE</p>
                </div>
            </div>
         </div>
