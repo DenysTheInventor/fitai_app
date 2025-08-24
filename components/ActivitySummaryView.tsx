@@ -92,7 +92,7 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
     
     return (
         <div ref={previewRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '800px', height: '800px', backgroundColor: '#121212', fontFamily: 'Inter, sans-serif' }}>
-           <div style={{ position: 'relative', width: '100%', height: '65%' }}>
+           <div style={{ position: 'relative', width: '100%', height: '83.3%' }}>
               <div className="map-container-for-share" style={{ width: '100%', height: '100%' }}></div>
                <div style={{ position: 'absolute', top: '20px', left: '20px', backgroundColor: 'rgba(0, 0, 0, 0.6)', padding: '10px 15px', borderRadius: '12px', zIndex: 1000 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -104,24 +104,24 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
                     </p>
                 </div>
            </div>
-           <div style={{ width: '100%', height: '35%', backgroundColor: '#1E1E1E', color: 'white', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '20px', boxSizing: 'border-box' }}>
+           <div style={{ width: '100%', height: '16.7%', backgroundColor: '#1E1E1E', color: 'white', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '10px', boxSizing: 'border-box' }}>
                <div style={{ textAlign: 'center' }}>
-                 <p style={{ fontSize: '16px', color: '#A0A0A0' }}>DISTANCE</p>
-                 <p style={{ fontSize: '48px', fontWeight: 'bold', color: '#00F5D4', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+                 <p style={{ fontSize: '56px', fontWeight: 'bold', color: '#00F5D4', display: 'flex', alignItems: 'baseline', justifyContent: 'center', lineHeight: 1 }}>
                     {activity.distanceKm.toFixed(2)}
-                    <span style={{ fontSize: '24px', color: '#A0A0A0', marginLeft: '5px' }}>km</span>
+                    <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px' }}>km</span>
                  </p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '4px' }}>DISTANCE</p>
                </div>
                <div style={{ textAlign: 'center' }}>
-                 <p style={{ fontSize: '16px', color: '#A0A0A0' }}>TIME</p>
-                 <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{formatTime(activity.durationSeconds)}</p>
+                 <p style={{ fontSize: '56px', fontWeight: 'bold', lineHeight: 1 }}>{formatTime(activity.durationSeconds)}</p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '4px' }}>TIME</p>
                </div>
                <div style={{ textAlign: 'center' }}>
-                 <p style={{ fontSize: '16px', color: '#A0A0A0' }}>PACE</p>
-                 <p style={{ fontSize: '48px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+                 <p style={{ fontSize: '56px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline', justifyContent: 'center', lineHeight: 1 }}>
                     {formatPace(pace)}
-                    <span style={{ fontSize: '24px', color: '#A0A0A0', marginLeft: '5px' }}>/km</span>
+                    <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px' }}>/km</span>
                  </p>
+                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '4px' }}>PACE</p>
                </div>
            </div>
         </div>
