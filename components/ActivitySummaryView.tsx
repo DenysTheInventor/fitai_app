@@ -1,11 +1,12 @@
-import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import React, { useLayoutEffect, useRef, useState, useEffect, useMemo } from 'react';
 import L from 'leaflet';
-import type { OutdoorRunActivity } from '../types';
+import type { OutdoorRunActivity, UserSettings } from '../types';
 import { ShareIcon } from '../constants';
 
 interface ActivitySummaryViewProps {
   activity: OutdoorRunActivity | undefined;
   goBack: () => void;
+  userSettings: UserSettings;
 }
 
 const formatTime = (totalSeconds: number): string => {
@@ -90,18 +91,26 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
     const pace = activity.distanceKm > 0 ? (activity.durationSeconds / 60) / activity.distanceKm : 0;
     
     return (
-        <div ref={previewRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '800px', height: '1067px', backgroundColor: '#121212', fontFamily: 'Inter, sans-serif' }}>
-           <div style={{ position: 'relative', width: '100%', height: '75%' }}>
+        <div ref={previewRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '800px', height: '800px', backgroundColor: '#121212', fontFamily: 'Inter, sans-serif' }}>
+           <div style={{ position: 'relative', width: '100%', height: '65%' }}>
               <div className="map-container-for-share" style={{ width: '100%', height: '100%' }}></div>
-              <div style={{ position: 'absolute', top: '20px', left: '20px', display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 15px', borderRadius: '12px' }}>
-                 <img src={APP_LOGO_SVG} alt="logo" style={{ width: '40px', height: '40px' }} />
-                 <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>FitAI Coach</span>
-              </div>
+               <div style={{ position: 'absolute', top: '20px', left: '20px', backgroundColor: 'rgba(0, 0, 0, 0.6)', padding: '10px 15px', borderRadius: '12px', zIndex: 1000 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img src={APP_LOGO_SVG} alt="logo" style={{ width: '40px', height: '40px' }} />
+                        <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>FitAI Coach</span>
+                    </div>
+                    <p style={{ color: '#E0E0E0', fontSize: '16px', marginTop: '5px' }}>
+                        {new Date(activity.id).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                </div>
            </div>
-           <div style={{ width: '100%', height: '25%', backgroundColor: '#1E1E1E', color: 'white', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '20px', boxSizing: 'border-box' }}>
+           <div style={{ width: '100%', height: '35%', backgroundColor: '#1E1E1E', color: 'white', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '20px', boxSizing: 'border-box' }}>
                <div style={{ textAlign: 'center' }}>
                  <p style={{ fontSize: '16px', color: '#A0A0A0' }}>DISTANCE</p>
-                 <p style={{ fontSize: '48px', fontWeight: 'bold', color: '#00F5D4' }}>{activity.distanceKm.toFixed(2)}<span style={{ fontSize: '24px', color: '#A0A0A0', marginLeft: '5px' }}>km</span></p>
+                 <p style={{ fontSize: '48px', fontWeight: 'bold', color: '#00F5D4', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+                    {activity.distanceKm.toFixed(2)}
+                    <span style={{ fontSize: '24px', color: '#A0A0A0', marginLeft: '5px' }}>km</span>
+                 </p>
                </div>
                <div style={{ textAlign: 'center' }}>
                  <p style={{ fontSize: '16px', color: '#A0A0A0' }}>TIME</p>
@@ -109,7 +118,10 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
                </div>
                <div style={{ textAlign: 'center' }}>
                  <p style={{ fontSize: '16px', color: '#A0A0A0' }}>PACE</p>
-                 <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{formatPace(pace)}<span style={{ fontSize: '24px', color: '#A0A0A0', marginLeft: '5px' }}>/km</span></p>
+                 <p style={{ fontSize: '48px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+                    {formatPace(pace)}
+                    <span style={{ fontSize: '24px', color: '#A0A0A0', marginLeft: '5px' }}>/km</span>
+                 </p>
                </div>
            </div>
         </div>
@@ -117,7 +129,7 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
 };
 
 
-const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goBack }) => {
+const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goBack, userSettings }) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
@@ -164,6 +176,14 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
     setIsSharing(false);
   };
 
+  const calories = useMemo(() => {
+    if (!activity || !userSettings.weight) {
+        return null;
+    }
+    // Approximation for running: 1.036 kcal per kg per km.
+    return Math.round(activity.distanceKm * userSettings.weight * 1.036);
+  }, [activity, userSettings.weight]);
+
   if (!activity) {
     return (
       <div className="text-center py-10 px-4">
@@ -179,17 +199,19 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto space-y-4">
-        <div 
-            id="summary-map-container"
-            ref={mapContainerRef} 
-            className="w-full h-48 md:h-64 rounded-lg overflow-hidden"
-        ></div>
+        <div className="bg-dark-surface rounded-lg">
+            <div 
+                id="summary-map-container"
+                ref={mapContainerRef} 
+                className="w-full h-48 md:h-64 rounded-lg overflow-hidden"
+            ></div>
+        </div>
       
         <div className="bg-dark-surface p-4 rounded-lg">
             <p className="text-dark-text-secondary text-sm">{activityDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             <h2 className="text-2xl font-bold text-white">{activity.name}</h2>
         </div>
-        <div className="bg-dark-surface p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
+        <div className="bg-dark-surface p-4 rounded-lg grid grid-cols-2 grid-rows-2 gap-4 text-center">
             <div>
                 <p className="text-xs text-dark-text-secondary">DISTANCE</p>
                 <p className="text-2xl font-bold text-brand-primary">{activity.distanceKm.toFixed(2)}<span className="text-lg text-dark-text-secondary ml-1">km</span></p>
@@ -202,6 +224,12 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
                 <p className="text-xs text-dark-text-secondary">PACE</p>
                 <p className="text-2xl font-bold text-white">{formatPace(pace)}<span className="text-lg text-dark-text-secondary ml-1">/km</span></p>
             </div>
+            {calories !== null && (
+                 <div>
+                    <p className="text-xs text-dark-text-secondary">CALORIES</p>
+                    <p className="text-2xl font-bold text-white">{calories}<span className="text-lg text-dark-text-secondary ml-1">kcal</span></p>
+                </div>
+            )}
         </div>
          <div className="bg-dark-surface p-4 rounded-lg">
             <button
@@ -209,7 +237,7 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
                 disabled={isSharing}
                 className="w-full bg-brand-primary text-dark-bg font-bold py-3 rounded-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
             >
-                {isSharing ? 'Подготовка...' : <><ShareIcon className="w-5 h-5" /> Поделиться</>}
+                {isSharing ? 'Preparing...' : <><ShareIcon className="w-5 h-5" /> Share</>}
             </button>
         </div>
       </div>

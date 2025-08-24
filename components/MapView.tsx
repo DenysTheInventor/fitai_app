@@ -73,8 +73,12 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
                 : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
             
             tileLayerRef.current.setUrl(newUrl);
-            tileLayerRef.current.options.attribution = newAttribution;
             mapRef.current.attributionControl.setPrefix(newAttribution);
+            // Force redraw of attribution
+            tileLayerRef.current.options.attribution = newAttribution;
+            if(mapRef.current.attributionControl) {
+                (mapRef.current.attributionControl as any)._update();
+            }
         }
     }, [mapTheme]);
 
@@ -100,7 +104,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             path.forEach(segment => {
                 if (segment.length > 1) {
                     const latLngs = segment.map(p => [p.lat, p.lng] as L.LatLngTuple);
-                    const newPolyline = L.polyline(latLngs, { color: '#9B5DE5', weight: 5, opacity: 0.8 }).addTo(mapRef.current!);
+                    const newPolyline = L.polyline(latLngs, { color: '#9B5DE5', weight: 5, opacity: 0.9 }).addTo(mapRef.current!);
                     polylineRef.current.push(newPolyline);
                 }
             });

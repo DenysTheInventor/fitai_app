@@ -190,7 +190,7 @@ function App() {
                 break;
             }
         }
-        return <ActivitySummaryView activity={selectedActivity} goBack={goBack} />;
+        return <ActivitySummaryView activity={selectedActivity} goBack={goBack} userSettings={userSettings} />;
       case 'check-in-form':
         const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
         return <CheckInFormView onSave={handleSaveCheckIn} goBack={goBack} date={selectedDate} checkInToEdit={checkInToEdit} />;
