@@ -1,6 +1,7 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import L from 'leaflet';
 import type { OutdoorRunActivity } from '../types';
+import { ShareIcon } from '../constants';
 
 interface ActivitySummaryViewProps {
   activity: OutdoorRunActivity | undefined;
@@ -24,9 +25,102 @@ const formatPace = (pace: number): string => {
     return `${minutes}:${seconds}`;
 }
 
+const APP_LOGO_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%239B5DE5'%3E%3Crect x='6' y='20' width='4' height='24' rx='1'/%3E%3Crect x='10' y='16' width='6' height='32' rx='1'/%3E%3Crect x='16' y='12' width='6' height='40' rx='1'/%3E%3Crect x='22' y='28' width='20' height='8' rx='2'/%3E%3Crect x='42' y='12' width='6' height='40' rx='1'/%3E%3Crect x='48' y='16' width='6' height='32' rx='1'/%3E%3Crect x='54' y='20' width='4' height='24' rx='1'/%3E%3C/svg%3E";
+
+const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => void; }> = ({ activity, onComplete }) => {
+    const previewRef = useRef<HTMLDivElement>(null);
+    const mapRef = useRef<L.Map | null>(null);
+
+    useEffect(() => {
+        const generateAndShare = async () => {
+            if (!previewRef.current) return;
+            
+            const mapContainer = previewRef.current.querySelector('.map-container-for-share') as HTMLDivElement;
+            if (!mapContainer) return;
+
+            // 1. Render map
+            mapRef.current = L.map(mapContainer, { zoomControl: false, preferCanvas: true, attributionControl: false });
+            const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
+            
+            const latLngs = activity.route.map(p => [p.lat, p.lng] as L.LatLngTuple);
+            const polyline = L.polyline(latLngs, { color: '#9B5DE5', weight: 5 }).addTo(mapRef.current);
+            mapRef.current.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+
+            // 2. Wait for map to load
+            await new Promise<void>(resolve => {
+                tileLayer.on('load', () => resolve());
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // 3. Capture with html2canvas
+            try {
+                const { default: html2canvas } = await import('https://esm.sh/html2canvas');
+                const canvas = await html2canvas(previewRef.current, { useCORS: true });
+                canvas.toBlob(async (blob) => {
+                    if (blob && navigator.share) {
+                        const file = new File([blob], 'activity-summary.png', { type: 'image/png' });
+                        await navigator.share({
+                            title: activity.name,
+                            text: `Check out my run: ${activity.distanceKm.toFixed(2)} km!`,
+                            files: [file],
+                        });
+                    } else {
+                         alert("Could not generate image for sharing.");
+                    }
+                }, 'image/png');
+            } catch (e) {
+                console.error("Sharing failed", e);
+                alert("Could not share the image.");
+            } finally {
+                // 4. Cleanup
+                mapRef.current?.remove();
+                onComplete();
+            }
+        };
+
+        generateAndShare();
+        
+        return () => {
+            mapRef.current?.remove();
+        };
+
+    }, [activity, onComplete]);
+
+    const pace = activity.distanceKm > 0 ? (activity.durationSeconds / 60) / activity.distanceKm : 0;
+    
+    return (
+        <div ref={previewRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '800px', height: '1067px', backgroundColor: '#121212', fontFamily: 'Inter, sans-serif' }}>
+           <div style={{ position: 'relative', width: '100%', height: '75%' }}>
+              <div className="map-container-for-share" style={{ width: '100%', height: '100%' }}></div>
+              <div style={{ position: 'absolute', top: '20px', left: '20px', display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 15px', borderRadius: '12px' }}>
+                 <img src={APP_LOGO_SVG} alt="logo" style={{ width: '40px', height: '40px' }} />
+                 <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>FitAI Coach</span>
+              </div>
+           </div>
+           <div style={{ width: '100%', height: '25%', backgroundColor: '#1E1E1E', color: 'white', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '20px', boxSizing: 'border-box' }}>
+               <div style={{ textAlign: 'center' }}>
+                 <p style={{ fontSize: '16px', color: '#A0A0A0' }}>DISTANCE</p>
+                 <p style={{ fontSize: '48px', fontWeight: 'bold', color: '#00F5D4' }}>{activity.distanceKm.toFixed(2)}<span style={{ fontSize: '24px', color: '#A0A0A0', marginLeft: '5px' }}>km</span></p>
+               </div>
+               <div style={{ textAlign: 'center' }}>
+                 <p style={{ fontSize: '16px', color: '#A0A0A0' }}>TIME</p>
+                 <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{formatTime(activity.durationSeconds)}</p>
+               </div>
+               <div style={{ textAlign: 'center' }}>
+                 <p style={{ fontSize: '16px', color: '#A0A0A0' }}>PACE</p>
+                 <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{formatPace(pace)}<span style={{ fontSize: '24px', color: '#A0A0A0', marginLeft: '5px' }}>/km</span></p>
+               </div>
+           </div>
+        </div>
+    );
+};
+
+
 const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goBack }) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   useLayoutEffect(() => {
     if (mapContainerRef.current && !mapRef.current && activity?.route && activity.route.length > 0) {
@@ -38,12 +132,12 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
         touchZoom: false,
       }).setView([51.505, -0.09], 13);
       
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
       const latLngs = activity.route.map(p => [p.lat, p.lng] as L.LatLngTuple);
-      const polyline = L.polyline(latLngs, { color: '#16a34a', weight: 4 }).addTo(map);
+      const polyline = L.polyline(latLngs, { color: '#9B5DE5', weight: 5, opacity: 0.8 }).addTo(map);
       
       map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
       
@@ -58,6 +152,18 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
     };
   }, [activity]);
 
+  const handleShare = () => {
+    if (!navigator.share) {
+        alert("Sharing is not supported on your browser.");
+        return;
+    }
+    setIsSharing(true);
+  };
+  
+  const onShareComplete = () => {
+    setIsSharing(false);
+  };
+
   if (!activity) {
     return (
       <div className="text-center py-10 px-4">
@@ -71,14 +177,14 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
   const activityDate = new Date(activity.id);
 
   return (
-    <div className="absolute inset-0 flex flex-col">
-      <div 
-        id="summary-map-container"
-        ref={mapContainerRef} 
-        className="w-full h-1/3"
-      ></div>
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto space-y-4">
+        <div 
+            id="summary-map-container"
+            ref={mapContainerRef} 
+            className="w-full h-48 md:h-64 rounded-lg overflow-hidden"
+        ></div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div className="bg-dark-surface p-4 rounded-lg">
             <p className="text-dark-text-secondary text-sm">{activityDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             <h2 className="text-2xl font-bold text-white">{activity.name}</h2>
@@ -86,7 +192,7 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
         <div className="bg-dark-surface p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
             <div>
                 <p className="text-xs text-dark-text-secondary">DISTANCE</p>
-                <p className="text-2xl font-bold text-white">{activity.distanceKm.toFixed(2)}<span className="text-lg text-dark-text-secondary ml-1">km</span></p>
+                <p className="text-2xl font-bold text-brand-primary">{activity.distanceKm.toFixed(2)}<span className="text-lg text-dark-text-secondary ml-1">km</span></p>
             </div>
             <div>
                 <p className="text-xs text-dark-text-secondary">TIME</p>
@@ -97,7 +203,17 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
                 <p className="text-2xl font-bold text-white">{formatPace(pace)}<span className="text-lg text-dark-text-secondary ml-1">/km</span></p>
             </div>
         </div>
+         <div className="bg-dark-surface p-4 rounded-lg">
+            <button
+                onClick={handleShare}
+                disabled={isSharing}
+                className="w-full bg-brand-primary text-dark-bg font-bold py-3 rounded-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+                {isSharing ? 'Подготовка...' : <><ShareIcon className="w-5 h-5" /> Поделиться</>}
+            </button>
+        </div>
       </div>
+      {isSharing && activity && <SharePreview activity={activity} onComplete={onShareComplete} />}
     </div>
   );
 };

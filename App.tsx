@@ -268,7 +268,7 @@ function App() {
          </div>
       </header>
       
-      <main className={`relative flex-grow ${view === 'tracking' || view === 'activity-summary' ? 'p-0' : 'p-4 pb-28'}`}>
+      <main className={`relative flex-grow ${view === 'tracking' ? 'p-0' : 'p-4 pb-28'}`}>
         {renderView()}
       </main>
       
