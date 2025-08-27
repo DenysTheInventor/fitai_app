@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useId } from 'react';
 import type { DailyLog, WorkoutActivity, Set, CustomExercise, ExerciseSet } from '../types';
 import { ActivityType } from '../types';
 import { PlusIcon, TrashIcon } from '../constants';
@@ -78,6 +78,8 @@ const AddWorkoutModal: React.FC<{
     // State for set logging
     const [selectedSetId, setSelectedSetId] = useState<string>('');
     const [setPerformances, setSetPerformances] = useState<Record<string, Set[]>>({});
+    
+    const exerciseDatalistId = useId();
 
     const selectedSet = useMemo(() => exerciseSets.find(s => s.id === selectedSetId), [selectedSetId, exerciseSets]);
     const exercisesInSet = useMemo(() => {
@@ -171,8 +173,8 @@ const AddWorkoutModal: React.FC<{
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-dark-text-secondary mb-1">Name</label>
-                            <input type="text" list="exercises" value={name} onChange={e => setName(e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" />
-                            <datalist id="exercises">
+                            <input type="text" list={exerciseDatalistId} value={name} onChange={e => setName(e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" />
+                            <datalist id={exerciseDatalistId}>
                                 {customExercises.map(ex => <option key={ex.id} value={ex.name} />)}
                             </datalist>
                             <LastPerformanceHint perf={lastPerformance} />
@@ -188,8 +190,18 @@ const AddWorkoutModal: React.FC<{
                              <button onClick={() => setSingleExSets(s => [...s, {reps: 8, weight: 20}])} className="text-sm text-brand-primary hover:underline">Add Set</button>
                            </div>
                         )}
-                        {activityType === ActivityType.Cardio && <input type="number" value={steps} onChange={e => setSteps(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" placeholder="Steps" />}
-                        {activityType === ActivityType.Sport && <input type="number" value={duration} onChange={e => setDuration(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" placeholder="Duration (mins)" />}
+                        {activityType === ActivityType.Cardio && (
+                            <div>
+                                <label className="block text-sm font-medium text-dark-text-secondary mb-1">Steps</label>
+                                <input type="number" value={steps} onChange={e => setSteps(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" placeholder="Steps" />
+                            </div>
+                        )}
+                        {activityType === ActivityType.Sport && (
+                            <div>
+                                <label className="block text-sm font-medium text-dark-text-secondary mb-1">Duration (Minutes)</label>
+                                <input type="number" value={duration} onChange={e => setDuration(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" placeholder="Duration (mins)" />
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="space-y-4">
