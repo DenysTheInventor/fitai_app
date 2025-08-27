@@ -91,17 +91,31 @@ const AddWorkoutModal: React.FC<{
         return null;
     }, [name, activityType, allLogs, logMode, selectedDate]);
 
+    // Effect to set a default exercise name ONLY when the type switches to WeightLifting
+    // or when the list of exercises populates for the first time.
     useEffect(() => {
         if (activityType === ActivityType.WeightLifting) {
-            setName(customExercises.length > 0 ? customExercises[0].name : '');
-        } else {
-            setName('');
+            if (customExercises.length > 0) {
+                // If the current name isn't in the list (e.g., it was deleted), reset it
+                const currentNameIsValid = customExercises.some(ex => ex.name === name);
+                if (!currentNameIsValid) {
+                    setName(customExercises[0].name);
+                }
+            } else {
+                setName('');
+            }
         }
-    }, [activityType, customExercises]);
+    }, [activityType, customExercises, name]);
 
 
     const handleActivityTypeChange = (newType: ActivityType) => {
         setActivityType(newType);
+        // Explicitly reset name when type changes
+        if (newType === ActivityType.WeightLifting) {
+            setName(customExercises.length > 0 ? customExercises[0].name : '');
+        } else {
+            setName(''); // Clear name for Cardio/Sport
+        }
     };
 
     const handleSetSelection = (setId: string) => {
@@ -133,7 +147,9 @@ const AddWorkoutModal: React.FC<{
         const idBase = new Date().toISOString();
 
         if (logMode === 'single') {
-            if (!name) {
+            const activityName = name || (activityType === ActivityType.WeightLifting && customExercises.length > 0 ? customExercises[0].name : '');
+
+            if (!activityName) {
                 if (activityType === ActivityType.WeightLifting) {
                      alert("Please add an exercise to your library first.");
                 } else {
@@ -141,11 +157,12 @@ const AddWorkoutModal: React.FC<{
                 }
                 return;
             }
+
             let newActivity: WorkoutActivity;
             switch (activityType) {
-                case ActivityType.WeightLifting: newActivity = { id: idBase, name, type: ActivityType.WeightLifting, sets: singleExSets }; break;
-                case ActivityType.Cardio: newActivity = { id: idBase, name, type: ActivityType.Cardio, steps }; break;
-                case ActivityType.Sport: newActivity = { id: idBase, name, type: ActivityType.Sport, durationMinutes: duration }; break;
+                case ActivityType.WeightLifting: newActivity = { id: idBase, name: activityName, type: ActivityType.WeightLifting, sets: singleExSets }; break;
+                case ActivityType.Cardio: newActivity = { id: idBase, name: activityName, type: ActivityType.Cardio, steps }; break;
+                case ActivityType.Sport: newActivity = { id: idBase, name: activityName, type: ActivityType.Sport, durationMinutes: duration }; break;
             }
             newActivities.push(newActivity);
         } else { // logMode === 'set'
@@ -197,11 +214,11 @@ const AddWorkoutModal: React.FC<{
                                     value={name} 
                                     onChange={e => setName(e.target.value)} 
                                     className="w-full bg-dark-card border border-white/20 rounded-md p-2"
-                                    disabled={customExercises.length === 0}
+                                    required 
                                 >
                                     {customExercises.length > 0 ? 
                                         customExercises.map(ex => <option key={ex.id} value={ex.name}>{ex.name}</option>) :
-                                        <option value="" disabled>Go to Exercises to add one</option>
+                                        <option value="" disabled>Add an exercise in the library first</option>
                                     }
                                 </select>
                                 <LastPerformanceHint perf={lastPerformance} />

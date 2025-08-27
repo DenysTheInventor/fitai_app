@@ -153,3 +153,19 @@ export const ShareIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3v12" />
   </svg>
 );
+
+export const ThemeToggleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" {...props}>
+    <circle cx="32" cy="32" r="14" fill="#FFD93B" stroke="#F4C534" strokeWidth="2"/>
+    <g stroke="#F4C534" strokeWidth="2" strokeLinecap="round">
+      <line x1="32" y1="4" x2="32" y2="14"/>
+      <line x1="32" y1="50" x2="32" y2="60"/>
+      <line x1="4" y1="32" x2="14" y2="32"/>
+      <line x1="50" y1="32" x2="60" y2="32"/>
+      <line x1="12" y1="12" x2="20" y2="20"/>
+      <line x1="44" y1="44" x2="52" y2="52"/>
+      <line x1="12" y1="52" x2="20" y2="44"/>
+      <line x1="44" y1="20" x2="52" y2="12"/>
+    </g>
+  </svg>
+);

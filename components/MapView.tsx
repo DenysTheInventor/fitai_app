@@ -3,7 +3,7 @@ import L from 'leaflet';
 import type { DailyLog, OutdoorRunActivity, View } from '../types';
 import { ActivityType } from '../types';
 import { useLocationTracker } from '../hooks/useLocationTracker';
-import { SunIcon } from '../constants';
+import { ThemeToggleIcon } from '../constants';
 
 interface MapViewProps {
   selectedDateLog: DailyLog;
@@ -180,7 +180,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
                     className="bg-dark-surface/80 backdrop-blur-md w-10 h-10 flex items-center justify-center rounded-full text-dark-text-secondary hover:bg-dark-card hover:text-white transition-colors"
                     aria-label="Toggle map theme"
                 >
-                    <SunIcon className="w-6 h-6" />
+                    <ThemeToggleIcon className="w-6 h-6" />
                 </button>
             </div>
 
