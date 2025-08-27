@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useId } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { DailyLog, WorkoutActivity, Set, CustomExercise, ExerciseSet } from '../types';
 import { ActivityType } from '../types';
 import { PlusIcon, TrashIcon } from '../constants';
@@ -78,8 +78,6 @@ const AddWorkoutModal: React.FC<{
     // State for set logging
     const [selectedSetId, setSelectedSetId] = useState<string>('');
     const [setPerformances, setSetPerformances] = useState<Record<string, Set[]>>({});
-    
-    const exerciseDatalistId = useId();
 
     const selectedSet = useMemo(() => exerciseSets.find(s => s.id === selectedSetId), [selectedSetId, exerciseSets]);
     const exercisesInSet = useMemo(() => {
@@ -92,6 +90,19 @@ const AddWorkoutModal: React.FC<{
         }
         return null;
     }, [name, activityType, allLogs, logMode, selectedDate]);
+
+    useEffect(() => {
+        if (activityType === ActivityType.WeightLifting) {
+            setName(customExercises.length > 0 ? customExercises[0].name : '');
+        } else {
+            setName('');
+        }
+    }, [activityType, customExercises]);
+
+
+    const handleActivityTypeChange = (newType: ActivityType) => {
+        setActivityType(newType);
+    };
 
     const handleSetSelection = (setId: string) => {
         setSelectedSetId(setId);
@@ -122,7 +133,14 @@ const AddWorkoutModal: React.FC<{
         const idBase = new Date().toISOString();
 
         if (logMode === 'single') {
-            if (!name) return;
+            if (!name) {
+                if (activityType === ActivityType.WeightLifting) {
+                     alert("Please add an exercise to your library first.");
+                } else {
+                     alert("Please enter a name for the activity.");
+                }
+                return;
+            }
             let newActivity: WorkoutActivity;
             switch (activityType) {
                 case ActivityType.WeightLifting: newActivity = { id: idBase, name, type: ActivityType.WeightLifting, sets: singleExSets }; break;
@@ -163,22 +181,44 @@ const AddWorkoutModal: React.FC<{
 
                 {logMode === 'single' ? (
                     <div className="space-y-4">
-                         <div>
+                        <div>
                             <label className="block text-sm font-medium text-dark-text-secondary mb-1">Activity Type</label>
-                            <select value={activityType} onChange={e => setActivityType(e.target.value as ActivityType)} className="w-full bg-dark-card border border-white/20 rounded-md p-2">
+                            <select value={activityType} onChange={e => handleActivityTypeChange(e.target.value as ActivityType)} className="w-full bg-dark-card border border-white/20 rounded-md p-2">
                                 <option value={ActivityType.WeightLifting}>Weight Lifting</option>
                                 <option value={ActivityType.Cardio}>Cardio</option>
                                 <option value={ActivityType.Sport}>Sport</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-dark-text-secondary mb-1">Name</label>
-                            <input type="text" list={exerciseDatalistId} value={name} onChange={e => setName(e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" />
-                            <datalist id={exerciseDatalistId}>
-                                {customExercises.map(ex => <option key={ex.id} value={ex.name} />)}
-                            </datalist>
-                            <LastPerformanceHint perf={lastPerformance} />
-                        </div>
+
+                        {activityType === ActivityType.WeightLifting ? (
+                            <div>
+                                <label className="block text-sm font-medium text-dark-text-secondary mb-1">Exercise</label>
+                                <select 
+                                    value={name} 
+                                    onChange={e => setName(e.target.value)} 
+                                    className="w-full bg-dark-card border border-white/20 rounded-md p-2"
+                                    disabled={customExercises.length === 0}
+                                >
+                                    {customExercises.length > 0 ? 
+                                        customExercises.map(ex => <option key={ex.id} value={ex.name}>{ex.name}</option>) :
+                                        <option value="" disabled>Go to Exercises to add one</option>
+                                    }
+                                </select>
+                                <LastPerformanceHint perf={lastPerformance} />
+                            </div>
+                        ) : (
+                            <div>
+                                <label className="block text-sm font-medium text-dark-text-secondary mb-1">Name</label>
+                                <input 
+                                    type="text" 
+                                    value={name} 
+                                    onChange={e => setName(e.target.value)} 
+                                    className="w-full bg-dark-card border border-white/20 rounded-md p-2" 
+                                    placeholder={activityType === ActivityType.Cardio ? "e.g., Treadmill" : "e.g., Basketball"}
+                                />
+                            </div>
+                        )}
+
                         {activityType === ActivityType.WeightLifting && (
                            <div className="space-y-2">
                              {singleExSets.map((set, i) => (
