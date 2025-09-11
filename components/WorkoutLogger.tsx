@@ -91,6 +91,17 @@ const AddWorkoutModal: React.FC<{
         return null;
     }, [name, activityType, allLogs, logMode, selectedDate]);
 
+    // Effect to pre-fill sets with last performance data
+    useEffect(() => {
+        if (logMode === 'single' && activityType === ActivityType.WeightLifting) {
+            if (lastPerformance && lastPerformance.length > 0) {
+                setSingleExSets(lastPerformance);
+            } else {
+                setSingleExSets([{ reps: 8, weight: 20 }]);
+            }
+        }
+    }, [lastPerformance, logMode, activityType]);
+
     // Effect to set a default exercise name ONLY when the type switches to WeightLifting
     // or when the list of exercises populates for the first time.
     useEffect(() => {
