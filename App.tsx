@@ -238,7 +238,7 @@ function App() {
     }
   }
   
-  const mainViews: View[] = ['home', 'calendar', 'tracking', 'exercises', 'analysis'];
+  const mainViews: View[] = ['home', 'calendar', 'history', 'exercises', 'analysis'];
   const showBackButton = !mainViews.includes(view);
   const showProfileButton = !showBackButton;
 

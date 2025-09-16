@@ -1,6 +1,6 @@
 import React from 'react';
 import type { View } from '../types';
-import { HomeIcon, CalendarIcon, SparklesIcon, DumbbellIcon, RunningIcon } from '../constants';
+import { HomeIcon, CalendarIcon, SparklesIcon, DumbbellIcon, ClipboardListIcon } from '../constants';
 
 interface BottomNavProps {
   currentView: View;
@@ -49,10 +49,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, setView }) => {
           onClick={() => setView('calendar')}
         />
          <NavButton
-          label="Track"
-          icon={<RunningIcon className="w-7 h-7" />}
-          isActive={currentView === 'tracking'}
-          onClick={() => setView('tracking')}
+          label="History"
+          icon={<ClipboardListIcon className="w-6 h-6" />}
+          isActive={currentView === 'history'}
+          onClick={() => setView('history')}
         />
         <NavButton
           label="Exercises"

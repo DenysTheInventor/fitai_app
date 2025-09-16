@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { View, UserSettings, AppData, UserGoal, UserGender } from '../types';
-import { UserCircleIcon, DownloadIcon, UploadIcon, ArrowPathIcon, CogIcon, ClipboardListIcon } from '../constants';
+import { UserCircleIcon, DownloadIcon, UploadIcon, ArrowPathIcon, CogIcon, RunningIcon } from '../constants';
 
 
 // Hub Card Component
@@ -20,7 +20,7 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ setView }) => {
     <div className="space-y-4">
       <HubCard label="Profile" icon={<UserCircleIcon className="w-14 h-14" />} onClick={() => setView('profile-settings')} />
       <HubCard label="System" icon={<CogIcon className="w-14 h-14" />} onClick={() => setView('system-settings')} />
-      <HubCard label="History" icon={<ClipboardListIcon className="w-14 h-14" />} onClick={() => setView('history')} />
+      <HubCard label="Track" icon={<RunningIcon className="w-14 h-14" />} onClick={() => setView('tracking')} />
     </div>
   );
 };
