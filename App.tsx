@@ -184,9 +184,17 @@ function App() {
   }, [logs, historyFilters]);
 
   const handleImportData = (data: AppData) => {
-    setLogs(data.logs);
-    setCustomExercises(data.customExercises);
-    setUserSettings(data.userSettings);
+    // This function migrates old backup data to the new structure for backward compatibility.
+    // 1. Ensure `habits` array exists in each log.
+    const migratedLogs = (data.logs || []).map(log => ({
+      ...log,
+      habits: log.habits || [], // If `habits` is missing, add it as an empty array.
+    }));
+
+    // 2. Set all states with fallbacks to prevent crashes from missing keys in old backups.
+    setLogs(migratedLogs);
+    setCustomExercises(data.customExercises || []);
+    setUserSettings(data.userSettings || initialSettings);
     setCheckIns(data.checkIns || []);
     setExerciseSets(data.exerciseSets || []);
     setBooks(data.books || []);
