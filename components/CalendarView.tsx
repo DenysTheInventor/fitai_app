@@ -2,6 +2,8 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { DailyLog, View, CheckIn, ReadingHabitLog } from '../types';
 import { HabitType } from '../types';
 import { PlusIcon, DumbbellIcon, ForkKnifeIcon, MoonIcon, CheckBadgeIcon, CalendarIcon, CalendarWeekIcon, LanguageIcon, BookOpenIcon, PencilSquareIcon } from '../constants';
+// FIX: Import HabitToLogType to correctly type the setHabitToLog prop.
+import type { HabitToLogType } from '../App';
 
 interface CalendarViewProps {
   logs: DailyLog[];
@@ -9,7 +11,8 @@ interface CalendarViewProps {
   setSelectedDate: (date: string) => void;
   setView: (view: View) => void;
   setSelectedCheckInId: (id: string | null) => void;
-  setHabitToLog: (habit: HabitType | null) => void;
+  // FIX: Update prop type to match the state setter from App.tsx.
+  setHabitToLog: (habit: HabitToLogType | null) => void;
 }
 
 const getLocalDateString = (d: Date): string => {
@@ -46,49 +49,44 @@ const AddLogChoiceModal: React.FC<{
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-surface dark:bg-dark-surface rounded-lg p-6 w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
                 <h2 className="text-xl font-bold mb-6 text-center text-text-base dark:text-dark-text-base">What do you want to log?</h2>
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
                      {isMonday && canAddCheckIn && (
-                        <button
+                        <LogChoiceButton
+                            label="Check-in"
+                            icon={<CheckBadgeIcon className="w-8 h-8 text-green-500" />}
                             onClick={() => onChoice('check-in-form')}
-                            className="w-full flex items-center justify-center gap-3 text-lg bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors"
-                        >
-                            <CheckBadgeIcon className="w-8 h-8 text-green-500" />
-                            <span>Add Check-in</span>
-                        </button>
+                        />
                     )}
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <LogChoiceButton 
-                            label="Workout" 
-                            icon={<DumbbellIcon className="w-8 h-8 text-secondary dark:text-dark-secondary" />}
-                            onClick={() => onChoice('routine')}
-                        />
-                        <LogChoiceButton 
-                            label="Nutrition" 
-                            icon={<ForkKnifeIcon className="w-8 h-8 text-primary dark:text-dark-primary" />}
-                            onClick={() => onChoice('nutrition')}
-                        />
-                         <LogChoiceButton 
-                            label="Sleep" 
-                            icon={<MoonIcon className="w-8 h-8 text-blue-500" />}
-                            onClick={() => onChoice('sleep')}
-                        />
-                        <LogChoiceButton 
-                            label="Reading" 
-                            icon={<BookOpenIcon className="w-8 h-8 text-yellow-500"/>}
-                            onClick={() => onChoice(HabitType.Reading)}
-                        />
-                        <LogChoiceButton 
-                            label="English" 
-                            icon={<LanguageIcon className="w-8 h-8 text-blue-500"/>}
-                            onClick={() => onChoice(HabitType.English)}
-                        />
-                         <LogChoiceButton 
-                            label="Blogging" 
-                            icon={<PencilSquareIcon className="w-8 h-8 text-green-500"/>}
-                            onClick={() => onChoice(HabitType.Blogging)}
-                        />
-                    </div>
+                    <LogChoiceButton 
+                        label="Workout" 
+                        icon={<DumbbellIcon className="w-8 h-8 text-secondary dark:text-dark-secondary" />}
+                        onClick={() => onChoice('routine')}
+                    />
+                    <LogChoiceButton 
+                        label="Nutrition" 
+                        icon={<ForkKnifeIcon className="w-8 h-8 text-primary dark:text-dark-primary" />}
+                        onClick={() => onChoice('nutrition')}
+                    />
+                     <LogChoiceButton 
+                        label="Sleep" 
+                        icon={<MoonIcon className="w-8 h-8 text-blue-500" />}
+                        onClick={() => onChoice('sleep')}
+                    />
+                    <LogChoiceButton 
+                        label="Reading" 
+                        icon={<BookOpenIcon className="w-8 h-8 text-yellow-500"/>}
+                        onClick={() => onChoice(HabitType.Reading)}
+                    />
+                    <LogChoiceButton 
+                        label="English" 
+                        icon={<LanguageIcon className="w-8 h-8 text-blue-500"/>}
+                        onClick={() => onChoice(HabitType.English)}
+                    />
+                     <LogChoiceButton 
+                        label="Blogging" 
+                        icon={<PencilSquareIcon className="w-8 h-8 text-green-500"/>}
+                        onClick={() => onChoice(HabitType.Blogging)}
+                    />
                 </div>
             </div>
         </div>
@@ -317,12 +315,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelected
 
   const openAddLogModal = (dateString: string) => {
     setSelectedDate(dateString);
+    setSelectedDateInternal(dateString);
     setIsChoiceModalOpen(true);
   };
   
   const handleChoice = (choice: 'routine' | 'nutrition' | 'sleep' | 'check-in-form' | HabitType) => {
     if (Object.values(HabitType).includes(choice as HabitType)) {
-        setHabitToLog(choice as HabitType);
+        // FIX: Pass a HabitToLogType object instead of just the HabitType string.
+        setHabitToLog({ type: choice as HabitType });
     } else if (choice === 'check-in-form') {
       setSelectedCheckInId(null);
       setView(choice);

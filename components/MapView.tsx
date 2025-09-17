@@ -1,4 +1,3 @@
-
 import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import L from 'leaflet';
 import type { DailyLog, OutdoorRunActivity, View } from '../types';

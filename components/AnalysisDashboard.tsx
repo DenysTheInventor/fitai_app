@@ -2,13 +2,16 @@
 
 import React, { useState, useCallback } from 'react';
 import { getAiAnalysis } from '../services/geminiService';
-import type { DailyLog, UserSettings, CheckIn } from '../types';
+// FIX: Import CustomHabit to use it in the component's props.
+import type { DailyLog, UserSettings, CheckIn, CustomHabit } from '../types';
 import { SparklesIcon } from '../constants';
 
 interface AnalysisDashboardProps {
   allLogs: DailyLog[];
   userSettings: UserSettings;
   checkIns: CheckIn[];
+  // FIX: Add customHabits to the props interface to accept it from App.tsx.
+  customHabits: CustomHabit[];
 }
 
 const getLocalDateString = (d = new Date()): string => {
@@ -39,7 +42,8 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
   return <div className="prose prose-invert text-text-secondary dark:text-dark-text-secondary space-y-2">{renderContent()}</div>;
 };
 
-const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ allLogs, userSettings, checkIns }) => {
+// FIX: Accept customHabits in the component's props destructuring.
+const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ allLogs, userSettings, checkIns, customHabits }) => {
   const [analysis, setAnalysis] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -89,14 +93,16 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ allLogs, userSett
     }
 
     try {
-      const result = await getAiAnalysis(logsForAnalysis, userSettings, checkIns, periodDescription);
+      // FIX: Pass the customHabits prop to the getAiAnalysis function call.
+      const result = await getAiAnalysis(logsForAnalysis, userSettings, checkIns, customHabits, periodDescription);
       setAnalysis(result);
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
-  }, [allLogs, userSettings, checkIns, period, selectedDate]);
+    // FIX: Add customHabits to the dependency array of useCallback.
+  }, [allLogs, userSettings, checkIns, customHabits, period, selectedDate]);
   
   const PeriodButton: React.FC<{label: string, value: Period}> = ({label, value}) => (
     <button onClick={() => setPeriod(value)} className={`px-4 py-2 text-sm rounded-md transition-colors ${period === value ? 'bg-secondary dark:bg-dark-secondary text-white font-semibold' : 'bg-card dark:bg-dark-card text-text-secondary dark:text-dark-text-secondary hover:bg-card-hover dark:hover:bg-dark-card-hover'}`}>
