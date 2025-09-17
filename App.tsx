@@ -1,372 +1,204 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet, OutdoorRunActivity, HabitLog, Book, ReadingHabitLog, GenericHabitLog } from './types';
-import { ActivityType, HabitType } from './types';
-import BottomNav from './components/BottomNav';
+import type { View, DailyLog, CustomExercise, UserSettings, WorkoutActivity, ExerciseSet, CheckIn, HabitType, Book } from './types';
+import { ActivityType } from './types';
+
+// Components
+import HomeView from './components/HomeView';
+import CalendarView from './components/CalendarView';
 import WorkoutLogger from './components/WorkoutLogger';
 import NutritionLogger from './components/NutritionLogger';
-import AnalysisDashboard from './components/AnalysisDashboard';
-import CalendarView from './components/CalendarView';
-import ExerciseLibrary from './components/ExerciseLibrary';
-import HistoryView from './components/HistoryView';
-import { SettingsHub, ProfileSettings, SystemSettings, HabitsHub } from './components/SettingsView';
-import HomeView from './components/HomeView';
 import SleepLogger from './components/SleepLogger';
-import CheckInFormView from './components/CheckInFormView';
-import CheckInsView from './components/CheckInsView';
-import CheckInDetailView from './components/CheckInDetailView';
+import AnalysisDashboard from './components/AnalysisDashboard';
+import BottomNav from './components/BottomNav';
 import ExerciseHubView from './components/ExerciseHubView';
+import ExerciseLibrary from './components/ExerciseLibrary';
 import SetsListView from './components/SetsListView';
 import SetFormView from './components/SetFormView';
+import CheckInsView from './components/CheckInsView';
+import CheckInFormView from './components/CheckInFormView';
+import CheckInDetailView from './components/CheckInDetailView';
+import HistoryView from './components/HistoryView';
+import SettingsView from './components/SettingsView';
 import MapView from './components/MapView';
 import ActivitySummaryView from './components/ActivitySummaryView';
+import LogHabitModal from './components/LogHabitModal';
+import HabitsLibraryView from './components/HabitsLibraryView';
 import ReadingLibraryView from './components/ReadingLibraryView';
 import BookFormView from './components/BookFormView';
-import { UserCircleIcon, ChevronLeftIcon } from './constants';
-import { useTheme } from './contexts/ThemeContext';
-import LogHabitModal from './components/LogHabitModal';
 
-const initialSettings: UserSettings = { 
-    name: 'User', 
-    photo: null,
-    weight: null,
-    height: null,
-    age: null,
-    gender: null,
-    goal: null,
-    bio: '',
-    lastBackupDate: null
-};
-
-const getLocalDateString = (d: Date = new Date()): string => {
+const getLocalDateString = (d = new Date()): string => {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
+const defaultSettings: UserSettings = {
+  name: 'User',
+  weight: 70,
+  height: 175,
+  goal: 'Stay healthy and active',
+};
+
 function App() {
-  const { theme } = useTheme();
-  const [viewHistory, setViewHistory] = useState<View[]>(['home']);
-  const view = viewHistory[viewHistory.length - 1];
-
   const [logs, setLogs] = useLocalStorage<DailyLog[]>('fitai-logs', []);
-  const [customExercises, setCustomExercises] = useLocalStorage<CustomExercise[]>('fitai-exercises', []);
-  const [userSettings, setUserSettings] = useLocalStorage<UserSettings>('fitai-settings', initialSettings);
+  const [customExercises, setCustomExercises] = useLocalStorage<CustomExercise[]>('fitai-custom-exercises', []);
+  const [exerciseSets, setExerciseSets] = useLocalStorage<ExerciseSet[]>('fitai-exercise-sets', []);
   const [checkIns, setCheckIns] = useLocalStorage<CheckIn[]>('fitai-checkins', []);
-  const [exerciseSets, setExerciseSets] = useLocalStorage<ExerciseSet[]>('fitai-sets', []);
   const [books, setBooks] = useLocalStorage<Book[]>('fitai-books', []);
-  const [habitToLog, setHabitToLog] = useState<HabitType | null>(null);
-
-  // This effect runs once on startup to migrate any old log data.
-  // It ensures that every log object has a `habits` array, providing
-  // backward compatibility with data stored before the habits feature was added.
+  const [userSettings, setUserSettings] = useLocalStorage<UserSettings>('fitai-settings', defaultSettings);
+  
+  // Data migration for backward compatibility
   useEffect(() => {
-    // Check if any log is missing the 'habits' property.
-    const needsMigration = logs.some(log => !log.hasOwnProperty('habits'));
-    
-    if (needsMigration) {
-      console.log("Migrating log data to new version...");
+    // Check if any log is missing the 'habits' array and add it.
+    // This prevents crashes when using data from older versions of the app.
+    if (logs.some(log => typeof log.habits === 'undefined')) {
       const migratedLogs = logs.map(log => ({
         ...log,
-        habits: log.habits || [], // Add empty habits array if missing
+        habits: log.habits || [],
       }));
       setLogs(migratedLogs);
     }
-  }, []); // Empty dependency array ensures this runs only once on mount.
-  
+  }, [logs, setLogs]);
+
+  const [view, setView] = useState<View>('home');
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
-  const [selectedCheckInId, setSelectedCheckInId] = useState<string | null>(null);
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
+  const [selectedCheckInId, setSelectedCheckInId] = useState<string | null>(null);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
-  
-  const setView = (newView: View, options?: { replace?: boolean }) => {
-    setViewHistory(prev => {
-        if (options?.replace) {
-            return [...prev.slice(0, -1), newView];
-        }
-        return [...prev, newView];
-    });
-  };
+  const [habitToLog, setHabitToLog] = useState<HabitType | null>(null);
 
-  const goBack = () => {
-      if (viewHistory.length > 1) {
-          setViewHistory(prev => prev.slice(0, -1));
-      }
-  };
+  const selectedDateLog = useMemo(() => {
+    return logs.find(log => log.date === selectedDate) || { date: selectedDate, workouts: [], nutrition: null, sleep: null, habits: [] };
+  }, [logs, selectedDate]);
 
-  const [historyFilters, setHistoryFilters] = useState<{
-    dateFrom: string;
-    dateTo: string;
-    activityTypes: ActivityType[];
-  }>({ dateFrom: '', dateTo: '', activityTypes: [] });
-
-  const getLogForDate = (date: string): DailyLog => {
-    return logs.find(log => log.date === date) || { date, workouts: [], nutrition: null, sleep: null, habits: [] };
-  };
-
-  const updateLogForDate = (updatedLog: DailyLog) => {
-    const otherLogs = logs.filter(log => log.date !== updatedLog.date);
-    const finalLog = (updatedLog.workouts.length === 0 && updatedLog.nutrition === null && updatedLog.sleep === null && updatedLog.habits.length === 0)
-        ? []
-        : [updatedLog];
-
-    setLogs([...otherLogs, ...finalLog].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-  };
-  
-  const handleSaveCheckIn = (checkIn: CheckIn | Omit<CheckIn, 'id' | 'date'> & {date: string}) => {
-    if ('id' in checkIn) { // Update existing
-      setCheckIns(prev => prev.map(ci => ci.id === checkIn.id ? checkIn : ci).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-    } else { // Create new
-      const checkInWithId: CheckIn = { ...checkIn, id: new Date().toISOString() };
-      setCheckIns(prev => [...prev, checkInWithId].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  const updateLog = (updatedLog: DailyLog) => {
+    const newLogs = logs.filter(log => log.date !== updatedLog.date);
+    // Only add log if it has data
+    const hasData = updatedLog.workouts.length > 0 || updatedLog.nutrition || updatedLog.sleep || (updatedLog.habits && updatedLog.habits.length > 0);
+    if (hasData) {
+        setLogs([...newLogs, updatedLog]);
+    } else {
+        setLogs(newLogs);
     }
-    goBack();
-  };
-  
-  const handleDeleteCheckIn = (id: string) => {
-    if(window.confirm("Are you sure you want to delete this check-in? This action cannot be undone.")) {
-      setCheckIns(prev => prev.filter(ci => ci.id !== id));
+    if (view !== 'calendar') {
+        setView('calendar');
     }
   };
 
   const handleSaveSet = (set: ExerciseSet | Omit<ExerciseSet, 'id'>) => {
     if ('id' in set) {
-        setExerciseSets(prev => prev.map(s => s.id === set.id ? set : s).sort((a,b) => a.name.localeCompare(b.name)));
+        setExerciseSets(sets => sets.map(s => s.id === set.id ? set : s));
     } else {
-        const newSet: ExerciseSet = { ...set, id: new Date().toISOString() };
-        setExerciseSets(prev => [...prev, newSet].sort((a,b) => a.name.localeCompare(b.name)));
+        setExerciseSets(sets => [...sets, { ...set, id: new Date().toISOString() }]);
     }
-    goBack();
+    setView('sets');
   };
-
+  
   const handleDeleteSet = (id: string) => {
       if (window.confirm("Are you sure you want to delete this set?")) {
-          setExerciseSets(prev => prev.filter(s => s.id !== id));
+        setExerciseSets(sets => sets.filter(s => s.id !== id));
+      }
+  }
+
+  const handleSaveCheckIn = (checkIn: CheckIn | Omit<CheckIn, 'id' | 'date'> & { date: string }) => {
+      if ('id' in checkIn) {
+          setCheckIns(cis => cis.map(ci => ci.id === checkIn.id ? checkIn : ci));
+      } else {
+          setCheckIns(cis => [...cis, { ...checkIn, id: new Date().toISOString() }]);
+      }
+      setView('calendar');
+  };
+  
+  const handleDeleteCheckIn = (id: string) => {
+      if (window.confirm("Are you sure you want to delete this check-in?")) {
+        setCheckIns(cis => cis.filter(ci => ci.id !== id));
       }
   };
 
   const handleSaveBook = (book: Book | Omit<Book, 'id'>) => {
-      if ('id' in book) {
-          setBooks(prev => prev.map(b => b.id === book.id ? book : b).sort((a,b) => a.title.localeCompare(b.title)));
-      } else {
-          const newBook: Book = { ...book, id: new Date().toISOString() };
-          setBooks(prev => [...prev, newBook].sort((a,b) => a.title.localeCompare(b.title)));
-      }
-      goBack();
+    if ('id' in book) {
+        setBooks(bs => bs.map(b => b.id === book.id ? book : b));
+    } else {
+        setBooks(bs => [...bs, { ...book, id: new Date().toISOString() }]);
+    }
+    setView('reading-library');
   };
 
   const handleDeleteBook = (id: string) => {
-      if (window.confirm("Are you sure you want to delete this book from your library?")) {
-          setBooks(prev => prev.filter(b => b.id !== id));
-      }
-  };
-  
-  const handleSaveHabit = (habitLog: HabitLog) => {
-      const logForDate = getLogForDate(selectedDate);
-      const updatedLog = { ...logForDate, habits: [...(logForDate.habits || []), habitLog] };
-      updateLogForDate(updatedLog);
-
-      if (habitLog.type === HabitType.Reading) {
-        const readingHabit = habitLog as ReadingHabitLog;
-        const book = books.find(b => b.id === readingHabit.bookId);
-        if (book && !book.isFinished) {
-            const totalPagesRead = logs.reduce((total, log) => {
-                const pages = (log.habits || [])
-                    .filter(h => h.type === HabitType.Reading && (h as ReadingHabitLog).bookId === readingHabit.bookId)
-                    .reduce((sum, h) => sum + (h as ReadingHabitLog).pagesRead, 0);
-                return total + pages;
-            }, 0) + readingHabit.pagesRead;
-
-            if (totalPagesRead >= book.totalPages) {
-                setBooks(prevBooks => prevBooks.map(b => 
-                    b.id === readingHabit.bookId ? { ...b, isFinished: true } : b
-                ));
-            }
-        }
-      }
+    if (window.confirm("Are you sure you want to delete this book from your library?")) {
+      setBooks(bs => bs.filter(b => b.id !== id));
+    }
   };
 
-  const filteredLogs = useMemo(() => {
-    return logs.filter(log => {
-      const logDate = new Date(log.date);
-      if (historyFilters.dateFrom && logDate < new Date(historyFilters.dateFrom)) return false;
-      if (historyFilters.dateTo && logDate > new Date(historyFilters.dateTo)) return false;
-      if (historyFilters.activityTypes.length > 0) {
-        const hasActivity = log.workouts.some(w => historyFilters.activityTypes.includes(w.type));
-        if (!hasActivity) return false;
-      }
-      return true;
-    });
-  }, [logs, historyFilters]);
+  const goBackToCalendar = () => setView('calendar');
+  const goBackToExercises = () => setView('exercises');
+  const goBackToSets = () => setView('sets');
+  const goBackToCheckIns = () => setView('check-ins');
+  const goBackToHabits = () => setView('habits');
+  const goBackToReadingLibrary = () => setView('reading-library');
 
-  const handleImportData = (data: AppData) => {
-    // This function migrates old backup data to the new structure for backward compatibility.
-    // 1. Ensure `habits` array exists in each log.
-    const migratedLogs = (data.logs || []).map(log => ({
-      ...log,
-      habits: log.habits || [], // If `habits` is missing, add it as an empty array.
-    }));
+  const setToEdit = useMemo(() => exerciseSets.find(s => s.id === selectedSetId), [selectedSetId, exerciseSets]);
+  const checkInToEdit = useMemo(() => checkIns.find(ci => ci.id === selectedCheckInId), [selectedCheckInId, checkIns]);
+  const checkInToView = useMemo(() => checkIns.find(ci => ci.id === selectedCheckInId), [selectedCheckInId, checkIns]);
+  const activityToView = useMemo(() => {
+    for (const log of logs) {
+        const activity = log.workouts.find(w => w.id === selectedActivityId && w.type === ActivityType.OutdoorRun);
+        if (activity) return activity as WorkoutActivity & { type: ActivityType.OutdoorRun };
+    }
+    return undefined;
+  }, [selectedActivityId, logs]);
+  const bookToEdit = useMemo(() => books.find(b => b.id === selectedBookId), [selectedBookId, books]);
 
-    // 2. Set all states with fallbacks to prevent crashes from missing keys in old backups.
-    setLogs(migratedLogs);
-    setCustomExercises(data.customExercises || []);
-    setUserSettings(data.userSettings || initialSettings);
-    setCheckIns(data.checkIns || []);
-    setExerciseSets(data.exerciseSets || []);
-    setBooks(data.books || []);
-  }
+  const todayLog = useMemo(() => logs.find(log => log.date === getLocalDateString()), [logs]);
 
   const renderView = () => {
-    const today = getLocalDateString();
-    const logForSelectedDate = getLogForDate(selectedDate);
-    const appData: AppData = { logs, customExercises, userSettings, checkIns, exerciseSets, books };
+    // Quick nav components
+    const backButton = (goBack: () => void) => (
+         <button onClick={goBack} className="text-text-secondary dark:text-dark-text-secondary mb-4 hover:text-text-base dark:hover:text-dark-text-base">&larr; Back</button>
+    );
 
-    switch (view) {
-      case 'home':
-        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} setHabitToLog={setHabitToLog} />;
-      case 'calendar':
-        return <CalendarView logs={logs} checkIns={checkIns} setSelectedDate={setSelectedDate} setView={setView} setSelectedCheckInId={setSelectedCheckInId} setHabitToLog={setHabitToLog} />;
-      case 'routine':
-        return <WorkoutLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} customExercises={customExercises} allLogs={logs} exerciseSets={exerciseSets} />;
-      case 'nutrition':
-        return <NutritionLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} goBack={goBack} />;
-      case 'sleep':
-        return <SleepLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} goBack={goBack} />;
-      case 'history':
-        return <HistoryView logs={filteredLogs} filters={historyFilters} setFilters={setHistoryFilters} onUpdateLog={updateLogForDate} setView={setView} setSelectedActivityId={setSelectedActivityId} />;
-      case 'exercises':
-        return <ExerciseHubView setView={setView} />;
-      case 'exercise-library':
-        return <ExerciseLibrary exercises={customExercises} setExercises={setCustomExercises} allLogs={logs} />;
-      case 'sets':
-        return <SetsListView sets={exerciseSets} setView={setView} setSelectedSetId={setSelectedSetId} onDelete={handleDeleteSet} />;
-      case 'set-form':
-        const setToEdit = exerciseSets.find(s => s.id === selectedSetId);
-        return <SetFormView onSave={handleSaveSet} goBack={goBack} customExercises={customExercises} setToEdit={setToEdit} />;
-      case 'analysis':
-        return <AnalysisDashboard allLogs={logs} userSettings={userSettings} checkIns={checkIns} />;
-      case 'settings-hub':
-        return <SettingsHub setView={setView} />;
-      case 'profile-settings':
-        return <ProfileSettings settings={userSettings} setSettings={setUserSettings} />;
-      case 'system-settings':
-        return <SystemSettings settings={userSettings} setSettings={setUserSettings} appData={appData} onImport={handleImportData} />;
-      case 'tracking':
-        return <MapView selectedDateLog={getLogForDate(today)} onUpdateLog={updateLogForDate} setView={setView} setSelectedActivityId={setSelectedActivityId}/>;
-      case 'habits-hub':
-        return <HabitsHub setView={setView} />;
-      case 'reading-library':
-        return <ReadingLibraryView books={books} allLogs={logs} setView={setView} setSelectedBookId={setSelectedBookId} onDelete={handleDeleteBook} />;
-      case 'book-form':
-        const bookToEdit = books.find(b => b.id === selectedBookId);
-        return <BookFormView onSave={handleSaveBook} goBack={goBack} bookToEdit={bookToEdit} />;
-      case 'activity-summary':
-        let selectedActivity: OutdoorRunActivity | undefined;
-        for (const log of logs) {
-            const found = log.workouts.find(w => w.id === selectedActivityId && w.type === ActivityType.OutdoorRun) as OutdoorRunActivity | undefined;
-            if (found) {
-                selectedActivity = found;
-                break;
-            }
-        }
-        return <ActivitySummaryView activity={selectedActivity} goBack={goBack} userSettings={userSettings} />;
-      case 'check-in-form':
-        const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
-        return <CheckInFormView onSave={handleSaveCheckIn} goBack={goBack} date={selectedDate} checkInToEdit={checkInToEdit} />;
-      case 'check-ins':
-        return <CheckInsView checkIns={checkIns} setView={setView} setSelectedCheckInId={setSelectedCheckInId} onDelete={handleDeleteCheckIn} />;
-      case 'check-in-detail':
-        const selectedCheckIn = checkIns.find(ci => ci.id === selectedCheckInId);
-        return <CheckInDetailView checkIn={selectedCheckIn} goBack={goBack} />;
-      default:
-        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} setHabitToLog={setHabitToLog} />;
+    switch(view) {
+      case 'home': return <HomeView todayLog={todayLog} userSettings={userSettings} setView={setView} />;
+      case 'calendar': return <CalendarView logs={logs} checkIns={checkIns} setSelectedDate={setSelectedDate} setView={setView} setSelectedCheckInId={setSelectedCheckInId} setHabitToLog={setHabitToLog} />;
+      case 'history': return <HistoryView allLogs={logs} />;
+      case 'exercises': return <ExerciseHubView setView={setView} />;
+      case 'analysis': return <AnalysisDashboard allLogs={logs} userSettings={userSettings} checkIns={checkIns} />;
+      case 'settings': return <SettingsView userSettings={userSettings} onSave={setUserSettings} />;
+      
+      // Sub-views with back buttons
+      case 'routine': return <><div className="mb-4 flex justify-between items-center">{backButton(goBackToCalendar)} <button onClick={() => setView('map')} className="px-4 py-2 text-sm rounded-md bg-secondary dark:bg-dark-secondary text-white font-semibold">Start Outdoor Run</button></div> <WorkoutLogger selectedDateLog={selectedDateLog} onUpdateLog={updateLog} customExercises={customExercises} allLogs={logs} exerciseSets={exerciseSets} /></>;
+      case 'nutrition': return <>{backButton(goBackToCalendar)} <NutritionLogger selectedDateLog={selectedDateLog} onUpdateLog={updateLog} goBack={goBackToCalendar} /></>;
+      case 'sleep': return <>{backButton(goBackToCalendar)} <SleepLogger selectedDateLog={selectedDateLog} onUpdateLog={updateLog} goBack={goBackToCalendar} /></>;
+      case 'exercise-library': return <>{backButton(goBackToExercises)} <ExerciseLibrary exercises={customExercises} setExercises={setCustomExercises} allLogs={logs} /></>;
+      case 'sets': return <>{backButton(goBackToExercises)} <SetsListView sets={exerciseSets} setView={setView} setSelectedSetId={setSelectedSetId} onDelete={handleDeleteSet} /></>;
+      case 'set-form': return <>{backButton(goBackToSets)} <SetFormView onSave={handleSaveSet} goBack={goBackToSets} customExercises={customExercises} setToEdit={setToEdit} /></>;
+      case 'check-ins': return <>{backButton(goBackToCalendar)} <CheckInsView checkIns={checkIns} setView={setView} setSelectedCheckInId={setSelectedCheckInId} onDelete={handleDeleteCheckIn} /></>;
+      case 'check-in-form': return <>{backButton(checkInToEdit ? goBackToCheckIns : goBackToCalendar)} <CheckInFormView onSave={handleSaveCheckIn} goBack={checkInToEdit ? goBackToCheckIns : goBackToCalendar} date={selectedDate} checkInToEdit={checkInToEdit} /></>;
+      case 'check-in-detail': return <>{backButton(goBackToCheckIns)} <CheckInDetailView checkIn={checkInToView} goBack={goBackToCheckIns} /></>;
+      case 'map': return <MapView selectedDateLog={selectedDateLog} onUpdateLog={updateLog} setView={setView} setSelectedActivityId={setSelectedActivityId} />;
+      case 'activity-summary': return <>{backButton(goBackToCalendar)} <ActivitySummaryView activity={activityToView} goBack={goBackToCalendar} userSettings={userSettings} /></>;
+      case 'habits': return <>{backButton(goBackToCalendar)}<HabitsLibraryView setView={setView} /></>;
+      case 'reading-library': return <>{backButton(goBackToHabits)}<ReadingLibraryView books={books} allLogs={logs} setView={setView} setSelectedBookId={setSelectedBookId} onDelete={handleDeleteBook} /></>;
+      case 'book-form': return <>{backButton(goBackToReadingLibrary)}<BookFormView onSave={handleSaveBook} goBack={goBackToReadingLibrary} bookToEdit={bookToEdit} /></>;
+      default: return <HomeView todayLog={todayLog} userSettings={userSettings} setView={setView} />;
     }
   };
-
-  const getHeaderText = () => {
-    switch(view) {
-        case 'home': return `Hello, ${userSettings.name}!`;
-        case 'routine':
-        case 'nutrition':
-        case 'sleep':
-            const date = new Date(`${selectedDate}T00:00:00`);
-            const isToday = selectedDate === getLocalDateString();
-            return isToday ? 'Today\'s Log' : date.toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' });
-        case 'calendar': return 'Calendar';
-        case 'history': return 'Log History';
-        case 'exercises': return 'Exercises & Sets';
-        case 'exercise-library': return 'Exercise Library';
-        case 'sets': return 'My Sets';
-        case 'set-form': return selectedSetId ? 'Edit Set' : 'Create Set';
-        case 'analysis': return 'AI Analysis';
-        case 'settings-hub': return 'Menu';
-        case 'profile-settings': return 'Profile Settings';
-        case 'system-settings': return 'System Settings';
-        case 'tracking': return 'Start Activity';
-        case 'habits-hub': return 'Habits';
-        case 'reading-library': return 'Reading Library';
-        case 'book-form': return selectedBookId ? 'Edit Book' : 'Add Book';
-        case 'activity-summary': return 'Activity Summary';
-        case 'check-ins': return 'Check-in History';
-        case 'check-in-form':
-            const checkInToEdit = checkIns.find(ci => ci.id === selectedCheckInId);
-            const formDate = checkInToEdit ? checkInToEdit.date : selectedDate;
-            const titlePrefix = checkInToEdit ? 'Edit Check-in' : 'New Check-in';
-            return `${titlePrefix} for ${new Date(formDate+'T00:00:00').toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}`;
-        case 'check-in-detail': 
-            const checkIn = checkIns.find(ci => ci.id === selectedCheckInId);
-            return checkIn ? `Check-in: ${new Date(checkIn.date+'T00:00:00').toLocaleDateString()}` : 'Check-in Details';
-        default: return 'FitAI Coach'
-    }
-  }
   
-  const mainViews: View[] = ['home', 'calendar', 'history', 'exercises', 'analysis'];
-  const showBackButton = !mainViews.includes(view);
-  const showProfileButton = !showBackButton;
+  const showBottomNav = ![
+    'map', 'activity-summary', 'set-form', 'check-in-form', 'book-form',
+  ].includes(view);
 
   return (
-    <div className="bg-bg-base dark:bg-dark-bg-base text-text-base dark:text-dark-text-base font-sans min-h-screen flex flex-col antialiased">
-      <header className="p-4 text-center sticky top-0 z-40 bg-bg-base/90 dark:bg-dark-bg-base/90 backdrop-blur-lg border-b border-border-base dark:border-dark-border-base">
-         <div className="flex items-center justify-between">
-            <div className="w-10">
-              {showBackButton && (
-                <button onClick={goBack} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-card dark:hover:bg-dark-surface transition-colors" aria-label="Go back">
-                  <ChevronLeftIcon className="w-6 h-6" />
-                </button>
-              )}
-            </div>
-            <h1 className="text-xl font-bold text-text-base dark:text-dark-text-base">{getHeaderText()}</h1>
-            <div className="w-10">
-              {showProfileButton && (
-                <button onClick={() => setView('settings-hub')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-card dark:hover:bg-dark-surface transition-colors" aria-label="Settings">
-                    {userSettings.photo ? (
-                        <img src={userSettings.photo} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
-                    ) : (
-                        <UserCircleIcon className="w-8 h-8 text-text-secondary dark:text-dark-text-secondary" />
-                    )}
-                </button>
-              )}
-            </div>
-         </div>
-      </header>
-      
-      <main className={`relative flex-grow ${view === 'tracking' ? 'p-0' : 'p-4 pb-28'}`}>
+    <div className="bg-bg-base dark:bg-dark-bg-base min-h-screen text-text-base dark:text-dark-text-base font-sans">
+      <main className="max-w-md mx-auto p-4 pb-24">
         {renderView()}
       </main>
-      
-      <BottomNav currentView={view} setView={setView} />
-
-      {habitToLog && (
-        <LogHabitModal
-            habitType={habitToLog}
-            onClose={() => setHabitToLog(null)}
-            onSave={handleSaveHabit}
-            books={books}
-            allLogs={logs}
-        />
-      )}
+      {showBottomNav && <BottomNav currentView={view} setView={setView} />}
+      {habitToLog && <LogHabitModal habitToLog={habitToLog} selectedDate={selectedDate} onClose={() => setHabitToLog(null)} onUpdateLog={updateLog} selectedDateLog={selectedDateLog} books={books} />}
     </div>
   );
 }

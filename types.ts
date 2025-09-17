@@ -1,4 +1,25 @@
-export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail' | 'exercise-library' | 'sets' | 'set-form' | 'tracking' | 'settings-hub' | 'profile-settings' | 'system-settings' | 'activity-summary' | 'habits-hub' | 'reading-library' | 'book-form';
+
+export type View =
+  | 'home'
+  | 'calendar'
+  | 'history'
+  | 'exercises'
+  | 'analysis'
+  | 'settings'
+  | 'routine'
+  | 'nutrition'
+  | 'sleep'
+  | 'exercise-library'
+  | 'sets'
+  | 'set-form'
+  | 'check-ins'
+  | 'check-in-form'
+  | 'check-in-detail'
+  | 'map'
+  | 'activity-summary'
+  | 'habits'
+  | 'reading-library'
+  | 'book-form';
 
 export enum ActivityType {
   WeightLifting = 'WeightLifting',
@@ -7,39 +28,30 @@ export enum ActivityType {
   OutdoorRun = 'OutdoorRun',
 }
 
-export enum HabitType {
-  English = 'English',
-  Reading = 'Reading',
-  Blogging = 'Blogging',
-}
-
-export type UserGoal = 'lose' | 'maintain' | 'gain';
-export type UserGender = 'male' | 'female';
-
 export interface Set {
   reps: number;
   weight: number;
 }
 
-export interface Exercise {
+export interface WeightLiftingActivity {
   id: string;
   name: string;
   type: ActivityType.WeightLifting;
   sets: Set[];
 }
 
-export interface Cardio {
-  id: string;
-  name: string;
-  type: ActivityType.Cardio;
-  steps: number;
+export interface CardioActivity {
+    id: string;
+    name: string;
+    type: ActivityType.Cardio;
+    steps: number;
 }
 
-export interface Sport {
-  id: string;
-  name: string;
-  type: ActivityType.Sport;
-  durationMinutes: number;
+export interface SportActivity {
+    id: string;
+    name: string;
+    type: ActivityType.Sport;
+    durationMinutes: number;
 }
 
 export interface GPSPoint {
@@ -58,8 +70,7 @@ export interface OutdoorRunActivity {
   route: GPSPoint[];
 }
 
-
-export type WorkoutActivity = Exercise | Cardio | Sport | OutdoorRunActivity;
+export type WorkoutActivity = WeightLiftingActivity | CardioActivity | SportActivity | OutdoorRunActivity;
 
 export interface NutritionLog {
   calories: number;
@@ -70,27 +81,36 @@ export interface NutritionLog {
 }
 
 export interface SleepLog {
-    durationHours: number;
+  durationHours: number;
+}
+
+export enum HabitType {
+  Reading = 'Reading',
+  English = 'English',
+  Blogging = 'Blogging',
 }
 
 export interface BaseHabitLog {
-  id: string;
-  type: HabitType;
-  durationMinutes: number;
+    id: string;
+    type: HabitType;
+    durationMinutes: number;
 }
 
 export interface ReadingHabitLog extends BaseHabitLog {
-  type: HabitType.Reading;
-  bookId: string;
-  pagesRead: number;
+    type: HabitType.Reading;
+    bookId: string;
+    pagesRead: number;
 }
 
-export interface GenericHabitLog extends BaseHabitLog {
-    type: HabitType.English | HabitType.Blogging;
-    notes?: string;
+export interface EnglishHabitLog extends BaseHabitLog {
+    type: HabitType.English;
 }
 
-export type HabitLog = ReadingHabitLog | GenericHabitLog;
+export interface BloggingHabitLog extends BaseHabitLog {
+    type: HabitType.Blogging;
+}
+
+export type HabitLog = ReadingHabitLog | EnglishHabitLog | BloggingHabitLog;
 
 export interface DailyLog {
   date: string; // YYYY-MM-DD
@@ -101,52 +121,38 @@ export interface DailyLog {
 }
 
 export interface CustomExercise {
-    id: string;
-    name: string;
-}
-
-export interface Book {
   id: string;
-  title: string;
-  author: string;
-  coverPhoto: string | null;
-  totalPages: number;
-  isFinished: boolean;
+  name: string;
 }
 
 export interface ExerciseSet {
-    id: string;
-    name: string;
-    exerciseIds: string[]; // References CustomExercise['id']
-}
-
-export interface CheckIn {
   id: string;
-  date: string; // YYYY-MM-DD
-  weight: number;
-  waist: number;
-  chest: number;
-  photo1: string | null;
-  photo2: string | null;
+  name: string;
+  exerciseIds: string[];
 }
 
 export interface UserSettings {
   name: string;
-  photo: string | null; // Base64 encoded image
-  weight: number | null;
-  height: number | null;
-  age: number | null;
-  gender: UserGender | null;
-  goal: UserGoal | null;
-  bio: string;
-  lastBackupDate: string | null;
+  weight: number;
+  height: number;
+  goal: string;
 }
 
-export interface AppData {
-  logs: DailyLog[];
-  customExercises: CustomExercise[];
-  userSettings: UserSettings;
-  checkIns: CheckIn[];
-  exerciseSets: ExerciseSet[];
-  books: Book[];
+export interface CheckIn {
+    id: string;
+    date: string; // YYYY-MM-DD
+    weight: number;
+    waist: number;
+    chest: number;
+    photo1: string | null;
+    photo2: string | null;
+}
+
+export interface Book {
+    id: string;
+    title: string;
+    author: string;
+    totalPages: number;
+    coverPhoto: string | null;
+    isFinished: boolean;
 }
