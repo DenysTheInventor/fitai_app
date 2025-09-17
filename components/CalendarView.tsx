@@ -28,6 +28,20 @@ const AddLogChoiceModal: React.FC<{
 }> = ({ isOpen, onClose, onChoice, isMonday, canAddCheckIn }) => {
     if (!isOpen) return null;
 
+    const LogChoiceButton: React.FC<{
+        icon: React.ReactNode;
+        label: string;
+        onClick: () => void;
+    }> = ({ icon, label, onClick }) => (
+        <button 
+            onClick={onClick} 
+            className="flex flex-col items-center justify-center gap-2 bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors aspect-square"
+        >
+            {icon}
+            <span className="font-semibold">{label}</span>
+        </button>
+    );
+
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-surface dark:bg-dark-surface rounded-lg p-6 w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -44,47 +58,37 @@ const AddLogChoiceModal: React.FC<{
                     )}
 
                     <div className="grid grid-cols-2 gap-3">
-                        <button onClick={() => onChoice(HabitType.Reading)} className="flex flex-col items-center justify-center gap-2 bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors aspect-square">
-                            <BookOpenIcon className="w-8 h-8 text-yellow-500"/>
-                            <span className="font-semibold">Reading</span>
-                        </button>
-                        <button onClick={() => onChoice(HabitType.English)} className="flex flex-col items-center justify-center gap-2 bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors aspect-square">
-                            <LanguageIcon className="w-8 h-8 text-blue-500"/>
-                            <span className="font-semibold">English</span>
-                        </button>
-                        <button onClick={() => onChoice(HabitType.Blogging)} className="flex flex-col items-center justify-center gap-2 bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors aspect-square">
-                            <PencilSquareIcon className="w-8 h-8 text-green-500"/>
-                            <span className="font-semibold">Blogging</span>
-                        </button>
+                        <LogChoiceButton 
+                            label="Workout" 
+                            icon={<DumbbellIcon className="w-8 h-8 text-secondary dark:text-dark-secondary" />}
+                            onClick={() => onChoice('routine')}
+                        />
+                        <LogChoiceButton 
+                            label="Nutrition" 
+                            icon={<ForkKnifeIcon className="w-8 h-8 text-primary dark:text-dark-primary" />}
+                            onClick={() => onChoice('nutrition')}
+                        />
+                         <LogChoiceButton 
+                            label="Sleep" 
+                            icon={<MoonIcon className="w-8 h-8 text-blue-500" />}
+                            onClick={() => onChoice('sleep')}
+                        />
+                        <LogChoiceButton 
+                            label="Reading" 
+                            icon={<BookOpenIcon className="w-8 h-8 text-yellow-500"/>}
+                            onClick={() => onChoice(HabitType.Reading)}
+                        />
+                        <LogChoiceButton 
+                            label="English" 
+                            icon={<LanguageIcon className="w-8 h-8 text-blue-500"/>}
+                            onClick={() => onChoice(HabitType.English)}
+                        />
+                         <LogChoiceButton 
+                            label="Blogging" 
+                            icon={<PencilSquareIcon className="w-8 h-8 text-green-500"/>}
+                            onClick={() => onChoice(HabitType.Blogging)}
+                        />
                     </div>
-
-                    <div className="relative flex py-2 items-center">
-                        <div className="flex-grow border-t border-border-base dark:border-dark-border-base"></div>
-                        <span className="flex-shrink mx-4 text-text-secondary dark:text-dark-text-secondary text-sm">Or</span>
-                        <div className="flex-grow border-t border-border-base dark:border-dark-border-base"></div>
-                    </div>
-
-                    <button
-                        onClick={() => onChoice('routine')}
-                        className="w-full flex items-center justify-center gap-3 text-lg bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors"
-                    >
-                        <DumbbellIcon className="w-8 h-8 text-secondary dark:text-dark-secondary" />
-                        <span>Workout</span>
-                    </button>
-                    <button
-                        onClick={() => onChoice('nutrition')}
-                        className="w-full flex items-center justify-center gap-3 text-lg bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors"
-                    >
-                        <ForkKnifeIcon className="w-8 h-8 text-primary dark:text-dark-primary" />
-                        <span>Nutrition</span>
-                    </button>
-                    <button
-                        onClick={() => onChoice('sleep')}
-                        className="w-full flex items-center justify-center gap-3 text-lg bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors"
-                    >
-                        <MoonIcon className="w-8 h-8 text-blue-500" />
-                        <span>Sleep</span>
-                    </button>
                 </div>
             </div>
         </div>
