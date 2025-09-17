@@ -7,9 +7,9 @@ interface ExerciseHubViewProps {
 }
 
 const HubCard: React.FC<{label: string, icon: React.ReactNode, onClick: () => void}> = ({label, icon, onClick}) => (
-    <div onClick={onClick} className="bg-dark-surface p-6 rounded-lg text-center cursor-pointer hover:bg-dark-card transition-colors">
-        <div className="w-16 h-16 mx-auto text-brand-primary flex items-center justify-center">{icon}</div>
-        <h3 className="font-semibold text-lg text-white mt-4">{label}</h3>
+    <div onClick={onClick} className="bg-surface dark:bg-dark-surface shadow-sm dark:shadow-none p-6 rounded-lg text-center cursor-pointer hover:bg-card-hover dark:hover:bg-dark-card transition-colors">
+        <div className="w-16 h-16 mx-auto text-primary dark:text-dark-primary flex items-center justify-center">{icon}</div>
+        <h3 className="font-semibold text-lg text-text-base dark:text-dark-text-base mt-4">{label}</h3>
     </div>
 );
 

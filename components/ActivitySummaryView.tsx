@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState, useEffect, useMemo } from 're
 import L from 'leaflet';
 import type { OutdoorRunActivity, UserSettings } from '../types';
 import { ShareIcon } from '../constants';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ActivitySummaryViewProps {
   activity: OutdoorRunActivity | undefined;
@@ -27,7 +28,7 @@ const formatPace = (pace: number): string => {
 }
 
 const DumbbellIconForShare = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="#9B5DE5" style={{ width: '40px', height: '40px' }}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="#6D28D9" style={{ width: '40px', height: '40px' }}>
       <rect x="6" y="20" width="4" height="24" rx="1"/>
       <rect x="10" y="16" width="6" height="32" rx="1"/>
       <rect x="16" y="12" width="6" height="40" rx="1"/>
@@ -54,7 +55,7 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
             const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
             
             const latLngs = activity.route.map(p => [p.lat, p.lng] as L.LatLngTuple);
-            const polyline = L.polyline(latLngs, { color: '#9B5DE5', weight: 5 }).addTo(mapRef.current);
+            const polyline = L.polyline(latLngs, { color: '#6D28D9', weight: 5 }).addTo(mapRef.current);
             mapRef.current.fitBounds(polyline.getBounds(), { padding: [40, 40] });
 
             // 2. Wait for map to load
@@ -67,7 +68,7 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
             // 3. Capture with html2canvas
             try {
                 const { default: html2canvas } = await import('https://esm.sh/html2canvas');
-                const canvas = await html2canvas(previewRef.current, { useCORS: true });
+                const canvas = await html2canvas(previewRef.current, { useCORS: true, backgroundColor: '#121212' });
                 canvas.toBlob(async (blob) => {
                     if (blob && navigator.share) {
                         const file = new File([blob], 'activity-summary.png', { type: 'image/png' });
@@ -101,37 +102,37 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
     const pace = activity.distanceKm > 0 ? (activity.durationSeconds / 60) / activity.distanceKm : 0;
     
     return (
-        <div ref={previewRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '800px', height: '800px', backgroundColor: '#121212', fontFamily: 'Inter, sans-serif' }}>
+        <div ref={previewRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '800px', height: '800px', backgroundColor: '#F9FAFB', fontFamily: 'Inter, sans-serif' }}>
            <div style={{ position: 'relative', width: '100%', height: '83.3%' }}>
               <div className="map-container-for-share" style={{ width: '100%', height: '100%' }}></div>
-               <div style={{ position: 'absolute', top: '20px', left: '20px', backgroundColor: 'rgba(0, 0, 0, 0.6)', padding: '10px 15px', borderRadius: '12px', zIndex: 1000 }}>
+               <div style={{ position: 'absolute', top: '20px', left: '20px', backgroundColor: 'rgba(255, 255, 255, 0.8)', padding: '10px 15px', borderRadius: '12px', zIndex: 1000 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <DumbbellIconForShare />
-                        <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>FitAI Coach</span>
+                        <span style={{ color: '#111827', fontSize: '24px', fontWeight: 'bold' }}>FitAI Coach</span>
                     </div>
-                    <p style={{ color: '#E0E0E0', fontSize: '16px', marginTop: '5px' }}>
+                    <p style={{ color: '#111827', fontSize: '16px', marginTop: '5px' }}>
                         {new Date(activity.id).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                 </div>
            </div>
-           <div style={{ width: '100%', height: '16.7%', backgroundColor: '#1E1E1E', color: 'white', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '10px', boxSizing: 'border-box' }}>
+           <div style={{ width: '100%', height: '16.7%', backgroundColor: '#FFFFFF', color: '#111827', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '10px', boxSizing: 'border-box' }}>
                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                 <p style={{ fontSize: '56px', fontWeight: 'bold', color: '#00F5D4', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+                 <p style={{ fontSize: '56px', fontWeight: 'bold', color: '#3B82F6', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
                     <span>{activity.distanceKm.toFixed(2)}</span>
-                    <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px', fontWeight: 'normal' }}>km</span>
+                    <span style={{ fontSize: '28px', color: '#6B7280', marginLeft: '8px', fontWeight: 'normal' }}>km</span>
                  </p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '16px' }}>DISTANCE</p>
+                 <p style={{ fontSize: '18px', color: '#6B7280', marginTop: '16px' }}>DISTANCE</p>
                </div>
                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                  <p style={{ fontSize: '56px', fontWeight: 'bold' }}>{formatTime(activity.durationSeconds)}</p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '16px' }}>TIME</p>
+                 <p style={{ fontSize: '18px', color: '#6B7280', marginTop: '16px' }}>TIME</p>
                </div>
                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                  <p style={{ fontSize: '56px', fontWeight: 'bold', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
                     <span>{formatPace(pace)}</span>
-                    <span style={{ fontSize: '28px', color: '#A0A0A0', marginLeft: '8px', fontWeight: 'normal' }}>/km</span>
+                    <span style={{ fontSize: '28px', color: '#6B7280', marginLeft: '8px', fontWeight: 'normal' }}>/km</span>
                  </p>
-                 <p style={{ fontSize: '18px', color: '#A0A0A0', marginTop: '16px' }}>PACE</p>
+                 <p style={{ fontSize: '18px', color: '#6B7280', marginTop: '16px' }}>PACE</p>
                </div>
            </div>
         </div>
@@ -140,6 +141,7 @@ const SharePreview: React.FC<{ activity: OutdoorRunActivity; onComplete: () => v
 
 
 const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goBack, userSettings }) => {
+  const { theme } = useTheme();
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
@@ -154,12 +156,15 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
         touchZoom: false,
       }).setView([51.505, -0.09], 13);
       
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      const tileUrl = theme === 'dark' 
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+      L.tileLayer(tileUrl, {
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
-      const latLngs = activity.route.map(p => [p.lat, p.lng] as L.LatLngTuple);
-      const polyline = L.polyline(latLngs, { color: '#9B5DE5', weight: 5, opacity: 0.8 }).addTo(map);
+      const polyline = L.polyline(activity.route.map(p => [p.lat, p.lng] as L.LatLngTuple), { color: theme === 'dark' ? '#9B5DE5' : '#6D28D9', weight: 5, opacity: 0.8 }).addTo(map);
       
       map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
       
@@ -172,7 +177,7 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
             mapRef.current = null;
         }
     };
-  }, [activity]);
+  }, [activity, theme]);
 
   const handleShare = () => {
     if (!navigator.share) {
@@ -197,8 +202,8 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
   if (!activity) {
     return (
       <div className="text-center py-10 px-4">
-        <p className="text-dark-text-secondary">Activity not found.</p>
-        <button onClick={goBack} className="text-brand-primary mt-4 font-semibold">Go Back</button>
+        <p className="text-text-secondary dark:text-dark-text-secondary">Activity not found.</p>
+        <button onClick={goBack} className="text-primary dark:text-dark-primary mt-4 font-semibold">Go Back</button>
       </div>
     );
   }
@@ -209,7 +214,7 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto space-y-4">
-        <div className="bg-dark-surface rounded-lg">
+        <div className="bg-surface dark:bg-dark-surface rounded-lg shadow-sm dark:shadow-none">
             <div 
                 id="summary-map-container"
                 ref={mapContainerRef} 
@@ -217,35 +222,35 @@ const ActivitySummaryView: React.FC<ActivitySummaryViewProps> = ({ activity, goB
             ></div>
         </div>
       
-        <div className="bg-dark-surface p-4 rounded-lg">
-            <p className="text-dark-text-secondary text-sm">{activityDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            <h2 className="text-2xl font-bold text-white">{activity.name}</h2>
+        <div className="bg-surface dark:bg-dark-surface p-4 rounded-lg shadow-sm dark:shadow-none">
+            <p className="text-text-secondary dark:text-dark-text-secondary text-sm">{activityDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <h2 className="text-2xl font-bold text-text-base dark:text-dark-text-base">{activity.name}</h2>
         </div>
-        <div className="bg-dark-surface p-4 rounded-lg grid grid-cols-2 grid-rows-2 gap-4 text-center">
+        <div className="bg-surface dark:bg-dark-surface p-4 rounded-lg shadow-sm dark:shadow-none grid grid-cols-2 grid-rows-2 gap-4 text-center">
             <div>
-                <p className="text-xs text-dark-text-secondary">DISTANCE</p>
-                <p className="text-2xl font-bold text-brand-primary">{activity.distanceKm.toFixed(2)}<span className="text-lg text-dark-text-secondary ml-1">km</span></p>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary">DISTANCE</p>
+                <p className="text-2xl font-bold text-primary dark:text-dark-primary">{activity.distanceKm.toFixed(2)}<span className="text-lg text-text-secondary dark:text-dark-text-secondary ml-1">km</span></p>
             </div>
             <div>
-                <p className="text-xs text-dark-text-secondary">TIME</p>
-                <p className="text-2xl font-bold text-white">{formatTime(activity.durationSeconds)}</p>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary">TIME</p>
+                <p className="text-2xl font-bold text-text-base dark:text-dark-text-base">{formatTime(activity.durationSeconds)}</p>
             </div>
             <div>
-                <p className="text-xs text-dark-text-secondary">PACE</p>
-                <p className="text-2xl font-bold text-white">{formatPace(pace)}<span className="text-lg text-dark-text-secondary ml-1">/km</span></p>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary">PACE</p>
+                <p className="text-2xl font-bold text-text-base dark:text-dark-text-base">{formatPace(pace)}<span className="text-lg text-text-secondary dark:text-dark-text-secondary ml-1">/km</span></p>
             </div>
             {calories !== null && (
                  <div>
-                    <p className="text-xs text-dark-text-secondary">CALORIES</p>
-                    <p className="text-2xl font-bold text-white">{calories}<span className="text-lg text-dark-text-secondary ml-1">kcal</span></p>
+                    <p className="text-xs text-text-secondary dark:text-dark-text-secondary">CALORIES</p>
+                    <p className="text-2xl font-bold text-text-base dark:text-dark-text-base">{calories}<span className="text-lg text-text-secondary dark:text-dark-text-secondary ml-1">kcal</span></p>
                 </div>
             )}
         </div>
-         <div className="bg-dark-surface p-4 rounded-lg">
+         <div className="bg-surface dark:bg-dark-surface p-4 rounded-lg shadow-sm dark:shadow-none">
             <button
                 onClick={handleShare}
                 disabled={isSharing}
-                className="w-full bg-brand-primary text-dark-bg font-bold py-3 rounded-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full bg-primary dark:bg-dark-primary text-white dark:text-dark-bg-base font-bold py-3 rounded-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
             >
                 {isSharing ? 'Preparing...' : <><ShareIcon className="w-5 h-5" /> Share</>}
             </button>

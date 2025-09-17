@@ -3,7 +3,8 @@ import L from 'leaflet';
 import type { DailyLog, OutdoorRunActivity, View } from '../types';
 import { ActivityType } from '../types';
 import { useLocationTracker } from '../hooks/useLocationTracker';
-import { ThemeToggleIcon } from '../constants';
+import { useTheme } from '../contexts/ThemeContext';
+import { SunIcon, MoonIcon } from '../constants';
 
 interface MapViewProps {
   selectedDateLog: DailyLog;
@@ -27,6 +28,7 @@ const formatPace = (pace: number): string => {
 }
 
 const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView, setSelectedActivityId }) => {
+    const { theme, setTheme } = useTheme();
     const mapRef = useRef<L.Map | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const polylineRef = useRef<L.Polyline[]>([]);
@@ -34,7 +36,6 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
     const tileLayerRef = useRef<L.TileLayer | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [activityName, setActivityName] = useState('Morning Run');
-    const [mapTheme, setMapTheme] = useState<'dark' | 'light'>('dark');
     
     const { 
         isTracking, isPaused, path, flatPath, stats, error, 
@@ -45,8 +46,15 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
         if (mapContainerRef.current && !mapRef.current) {
             const map = L.map(mapContainerRef.current, { zoomControl: false }).setView([51.505, -0.09], 13);
             
-            tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            const initialUrl = theme === 'dark'
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            const initialAttribution = theme === 'dark'
+                ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+            tileLayerRef.current = L.tileLayer(initialUrl, {
+                attribution: initialAttribution,
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(map);
@@ -65,22 +73,21 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
     
     useEffect(() => {
         if (tileLayerRef.current && mapRef.current?.attributionControl) {
-            const newUrl = mapTheme === 'dark'
+            const newUrl = theme === 'dark'
                 ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
                 : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-            const newAttribution = mapTheme === 'dark'
+            const newAttribution = theme === 'dark'
                 ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
             
             tileLayerRef.current.setUrl(newUrl);
             mapRef.current.attributionControl.setPrefix(newAttribution);
-            // Force redraw of attribution
             tileLayerRef.current.options.attribution = newAttribution;
             if(mapRef.current.attributionControl) {
                 (mapRef.current.attributionControl as any)._update();
             }
         }
-    }, [mapTheme]);
+    }, [theme]);
 
     useLayoutEffect(() => {
         if (mapRef.current && flatPath.length > 0) {
@@ -104,7 +111,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             path.forEach(segment => {
                 if (segment.length > 1) {
                     const latLngs = segment.map(p => [p.lat, p.lng] as L.LatLngTuple);
-                    const newPolyline = L.polyline(latLngs, { color: '#9B5DE5', weight: 5, opacity: 0.9 }).addTo(mapRef.current!);
+                    const newPolyline = L.polyline(latLngs, { color: '#6D28D9', weight: 5, opacity: 0.9 }).addTo(mapRef.current!);
                     polylineRef.current.push(newPolyline);
                 }
             });
@@ -157,18 +164,18 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             
             {/* Stats Panel */}
             <div className="absolute top-0 left-0 right-0 p-4 z-10">
-                <div className="bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center">
+                <div className="bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-md p-4 rounded-lg grid grid-cols-3 gap-4 text-center shadow-lg">
                     <div>
-                        <p className="text-xs text-dark-text-secondary">DISTANCE (KM)</p>
-                        <p className="text-2xl font-bold text-white">{stats.distanceKm.toFixed(2)}</p>
+                        <p className="text-xs text-text-secondary dark:text-dark-text-secondary">DISTANCE (KM)</p>
+                        <p className="text-2xl font-bold text-text-base dark:text-dark-text-base">{stats.distanceKm.toFixed(2)}</p>
                     </div>
                     <div>
-                        <p className="text-xs text-dark-text-secondary">TIME</p>
-                        <p className="text-2xl font-bold text-white">{formatTime(stats.durationSeconds)}</p>
+                        <p className="text-xs text-text-secondary dark:text-dark-text-secondary">TIME</p>
+                        <p className="text-2xl font-bold text-text-base dark:text-dark-text-base">{formatTime(stats.durationSeconds)}</p>
                     </div>
                     <div>
-                        <p className="text-xs text-dark-text-secondary">PACE (/KM)</p>
-                        <p className="text-2xl font-bold text-white">{formatPace(stats.paceMinPerKm)}</p>
+                        <p className="text-xs text-text-secondary dark:text-dark-text-secondary">PACE (/KM)</p>
+                        <p className="text-2xl font-bold text-text-base dark:text-dark-text-base">{formatPace(stats.paceMinPerKm)}</p>
                     </div>
                 </div>
             </div>
@@ -176,30 +183,31 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             {/* Map Overlays (like the theme button) */}
             <div className="absolute top-28 left-4 z-10">
                  <button 
-                    onClick={() => setMapTheme(prev => prev === 'dark' ? 'light' : 'dark')}
-                    className="bg-dark-surface/80 backdrop-blur-md w-10 h-10 flex items-center justify-center rounded-full text-dark-text-secondary hover:bg-dark-card hover:text-white transition-colors"
+                    // FIX: Changed from functional update `(prev => ...)` to direct value update to match the context's type definition for `setTheme`.
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-md w-10 h-10 flex items-center justify-center rounded-full text-text-secondary dark:text-dark-text-secondary hover:bg-card-hover dark:hover:bg-dark-card hover:text-text-base dark:hover:text-dark-text-base transition-colors shadow-lg"
                     aria-label="Toggle map theme"
                 >
-                    <ThemeToggleIcon className="w-6 h-6" />
+                    {theme === 'dark' ? <SunIcon className="w-6 h-6"/> : <MoonIcon className="w-6 h-6"/>}
                 </button>
             </div>
 
-            {error && <div className="absolute top-24 left-4 right-4 bg-red-900/80 border border-red-500 text-red-300 p-3 rounded-lg z-[1000] text-sm">{error}</div>}
+            {error && <div className="absolute top-24 left-4 right-4 bg-danger/80 border border-danger text-white p-3 rounded-lg z-[1000] text-sm shadow-lg">{error}</div>}
 
             {/* Controls */}
             <div className="absolute bottom-24 left-0 right-0 z-[1000] flex justify-around items-center">
                  {!isTracking ? (
-                    <button onClick={startTracking} className="w-20 h-20 bg-brand-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
+                    <button onClick={startTracking} className="w-20 h-20 bg-secondary dark:bg-dark-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-105 transition-transform">
                         START
                     </button>
                 ) : (
                     <>
                        {!isPaused ? (
-                         <button onClick={pauseTracking} className="px-6 py-3 bg-yellow-600 rounded-full text-white font-semibold">PAUSE</button>
+                         <button onClick={pauseTracking} className="px-6 py-3 bg-warning rounded-full text-text-base font-semibold shadow-lg">PAUSE</button>
                        ) : (
-                         <button onClick={resumeTracking} className="px-6 py-3 bg-green-600 rounded-full text-white font-semibold">RESUME</button>
+                         <button onClick={resumeTracking} className="px-6 py-3 bg-success rounded-full text-white font-semibold shadow-lg">RESUME</button>
                        )}
-                       <button onClick={handleFinish} className="px-6 py-3 bg-red-600 rounded-full text-white font-semibold">FINISH</button>
+                       <button onClick={handleFinish} className="px-6 py-3 bg-danger rounded-full text-white font-semibold shadow-lg">FINISH</button>
                     </>
                 )}
             </div>
@@ -207,15 +215,15 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             {/* Save Modal */}
             {isSaving && (
                 <div className="fixed inset-0 bg-black/70 z-[2000] flex items-center justify-center p-4">
-                    <div className="bg-dark-surface rounded-lg p-6 w-full max-w-sm shadow-xl space-y-4">
-                        <h2 className="text-xl font-bold text-white">Save Activity</h2>
+                    <div className="bg-surface dark:bg-dark-surface rounded-lg p-6 w-full max-w-sm shadow-xl space-y-4">
+                        <h2 className="text-xl font-bold text-text-base dark:text-dark-text-base">Save Activity</h2>
                         <div>
-                            <label className="block text-sm font-medium text-dark-text-secondary mb-1">Activity Name</label>
-                            <input type="text" value={activityName} onChange={e => setActivityName(e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text" />
+                            <label className="block text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-1">Activity Name</label>
+                            <input type="text" value={activityName} onChange={e => setActivityName(e.target.value)} className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2 text-text-base dark:text-dark-text-base" />
                         </div>
                         <div className="flex justify-end gap-3">
-                            <button onClick={handleCancelSave} className="px-4 py-2 rounded-md bg-dark-card text-dark-text hover:bg-white/10">Discard</button>
-                            <button onClick={handleSave} className="px-4 py-2 rounded-md bg-brand-primary text-dark-bg font-semibold">Save</button>
+                            <button onClick={handleCancelSave} className="px-4 py-2 rounded-md bg-card dark:bg-dark-card text-text-base dark:text-dark-text-base hover:bg-card-hover dark:hover:bg-dark-card-hover">Discard</button>
+                            <button onClick={handleSave} className="px-4 py-2 rounded-md bg-primary text-white dark:text-dark-bg-base font-semibold">Save</button>
                         </div>
                     </div>
                 </div>

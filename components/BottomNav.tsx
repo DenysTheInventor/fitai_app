@@ -13,8 +13,8 @@ const NavButton: React.FC<{
   isActive: boolean;
   onClick: () => void;
 }> = ({ label, icon, isActive, onClick }) => {
-  const activeClasses = 'text-brand-primary';
-  const inactiveClasses = 'text-dark-text-secondary hover:text-dark-text';
+  const activeClasses = 'text-primary dark:text-dark-primary';
+  const inactiveClasses = 'text-text-secondary dark:text-dark-text-secondary hover:text-text-base dark:hover:text-dark-text-base';
 
   return (
     <button
@@ -34,7 +34,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, setView }) => {
   const isExerciseView = ['exercises', 'exercise-library', 'sets', 'set-form'].includes(currentView);
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 h-20 bg-dark-surface/80 backdrop-blur-lg border-t border-white/10 z-50">
+    <footer className="fixed bottom-0 left-0 right-0 h-20 bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-lg border-t border-border-base dark:border-dark-border-base z-50">
       <nav className="flex justify-around items-center h-full max-w-md mx-auto">
         <NavButton
           label="Home"

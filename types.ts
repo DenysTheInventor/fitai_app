@@ -1,10 +1,16 @@
-export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail' | 'exercise-library' | 'sets' | 'set-form' | 'tracking' | 'settings-hub' | 'profile-settings' | 'system-settings' | 'activity-summary';
+export type View = 'home' | 'routine' | 'nutrition' | 'analysis' | 'calendar' | 'exercises' | 'history' | 'sleep' | 'check-in-form' | 'check-ins' | 'check-in-detail' | 'exercise-library' | 'sets' | 'set-form' | 'tracking' | 'settings-hub' | 'profile-settings' | 'system-settings' | 'activity-summary' | 'habits-hub' | 'reading-library' | 'book-form';
 
 export enum ActivityType {
   WeightLifting = 'WeightLifting',
   Cardio = 'Cardio',
   Sport = 'Sport',
   OutdoorRun = 'OutdoorRun',
+}
+
+export enum HabitType {
+  English = 'English',
+  Reading = 'Reading',
+  Blogging = 'Blogging',
 }
 
 export type UserGoal = 'lose' | 'maintain' | 'gain';
@@ -67,16 +73,44 @@ export interface SleepLog {
     durationHours: number;
 }
 
+export interface BaseHabitLog {
+  id: string;
+  type: HabitType;
+  durationMinutes: number;
+}
+
+export interface ReadingHabitLog extends BaseHabitLog {
+  type: HabitType.Reading;
+  bookId: string;
+  pagesRead: number;
+}
+
+export interface GenericHabitLog extends BaseHabitLog {
+    type: HabitType.English | HabitType.Blogging;
+}
+
+export type HabitLog = ReadingHabitLog | GenericHabitLog;
+
 export interface DailyLog {
   date: string; // YYYY-MM-DD
   workouts: WorkoutActivity[];
   nutrition: NutritionLog | null;
   sleep: SleepLog | null;
+  habits: HabitLog[];
 }
 
 export interface CustomExercise {
     id: string;
     name: string;
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  coverPhoto: string | null;
+  totalPages: number;
+  isFinished: boolean;
 }
 
 export interface ExerciseSet {
@@ -113,4 +147,5 @@ export interface AppData {
   userSettings: UserSettings;
   checkIns: CheckIn[];
   exerciseSets: ExerciseSet[];
+  books: Book[];
 }

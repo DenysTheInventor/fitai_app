@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet, OutdoorRunActivity } from './types';
-import { ActivityType } from './types';
+import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet, OutdoorRunActivity, HabitLog, Book, ReadingHabitLog } from './types';
+import { ActivityType, HabitType } from './types';
 import BottomNav from './components/BottomNav';
 import WorkoutLogger from './components/WorkoutLogger';
 import NutritionLogger from './components/NutritionLogger';
@@ -9,7 +9,7 @@ import AnalysisDashboard from './components/AnalysisDashboard';
 import CalendarView from './components/CalendarView';
 import ExerciseLibrary from './components/ExerciseLibrary';
 import HistoryView from './components/HistoryView';
-import { SettingsHub, ProfileSettings, SystemSettings } from './components/SettingsView';
+import { SettingsHub, ProfileSettings, SystemSettings, HabitsHub } from './components/SettingsView';
 import HomeView from './components/HomeView';
 import SleepLogger from './components/SleepLogger';
 import CheckInFormView from './components/CheckInFormView';
@@ -20,7 +20,10 @@ import SetsListView from './components/SetsListView';
 import SetFormView from './components/SetFormView';
 import MapView from './components/MapView';
 import ActivitySummaryView from './components/ActivitySummaryView';
+import ReadingLibraryView from './components/ReadingLibraryView';
+import BookFormView from './components/BookFormView';
 import { UserCircleIcon, ChevronLeftIcon } from './constants';
+import { useTheme } from './contexts/ThemeContext';
 
 const initialSettings: UserSettings = { 
     name: 'User', 
@@ -42,6 +45,7 @@ const getLocalDateString = (d: Date = new Date()): string => {
 };
 
 function App() {
+  const { theme } = useTheme();
   const [viewHistory, setViewHistory] = useState<View[]>(['home']);
   const view = viewHistory[viewHistory.length - 1];
 
@@ -50,11 +54,13 @@ function App() {
   const [userSettings, setUserSettings] = useLocalStorage<UserSettings>('fitai-settings', initialSettings);
   const [checkIns, setCheckIns] = useLocalStorage<CheckIn[]>('fitai-checkins', []);
   const [exerciseSets, setExerciseSets] = useLocalStorage<ExerciseSet[]>('fitai-sets', []);
+  const [books, setBooks] = useLocalStorage<Book[]>('fitai-books', []);
   
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const [selectedCheckInId, setSelectedCheckInId] = useState<string | null>(null);
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   
   const setView = (newView: View, options?: { replace?: boolean }) => {
     setViewHistory(prev => {
@@ -78,12 +84,12 @@ function App() {
   }>({ dateFrom: '', dateTo: '', activityTypes: [] });
 
   const getLogForDate = (date: string): DailyLog => {
-    return logs.find(log => log.date === date) || { date, workouts: [], nutrition: null, sleep: null };
+    return logs.find(log => log.date === date) || { date, workouts: [], nutrition: null, sleep: null, habits: [] };
   };
 
   const updateLogForDate = (updatedLog: DailyLog) => {
     const otherLogs = logs.filter(log => log.date !== updatedLog.date);
-    const finalLog = (updatedLog.workouts.length === 0 && updatedLog.nutrition === null && updatedLog.sleep === null)
+    const finalLog = (updatedLog.workouts.length === 0 && updatedLog.nutrition === null && updatedLog.sleep === null && updatedLog.habits.length === 0)
         ? []
         : [updatedLog];
 
@@ -122,6 +128,47 @@ function App() {
       }
   };
 
+  const handleSaveBook = (book: Book | Omit<Book, 'id'>) => {
+      if ('id' in book) {
+          setBooks(prev => prev.map(b => b.id === book.id ? book : b).sort((a,b) => a.title.localeCompare(b.title)));
+      } else {
+          const newBook: Book = { ...book, id: new Date().toISOString() };
+          setBooks(prev => [...prev, newBook].sort((a,b) => a.title.localeCompare(b.title)));
+      }
+      goBack();
+  };
+
+  const handleDeleteBook = (id: string) => {
+      if (window.confirm("Are you sure you want to delete this book from your library?")) {
+          setBooks(prev => prev.filter(b => b.id !== id));
+      }
+  };
+  
+  const handleSaveHabit = (habitLog: HabitLog) => {
+      const today = getLocalDateString();
+      const logForToday = getLogForDate(today);
+      const updatedLog = { ...logForToday, habits: [...logForToday.habits, habitLog] };
+      updateLogForDate(updatedLog);
+
+      if (habitLog.type === HabitType.Reading) {
+        const readingHabit = habitLog as ReadingHabitLog;
+        const book = books.find(b => b.id === readingHabit.bookId);
+        if (book && !book.isFinished) {
+            const totalPagesRead = logs.reduce((total, log) => {
+                const pages = log.habits
+                    .filter(h => h.type === HabitType.Reading && (h as ReadingHabitLog).bookId === readingHabit.bookId)
+                    .reduce((sum, h) => sum + (h as ReadingHabitLog).pagesRead, 0);
+                return total + pages;
+            }, 0) + readingHabit.pagesRead;
+
+            if (totalPagesRead >= book.totalPages) {
+                setBooks(prevBooks => prevBooks.map(b => 
+                    b.id === readingHabit.bookId ? { ...b, isFinished: true } : b
+                ));
+            }
+        }
+      }
+  };
 
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
@@ -142,16 +189,17 @@ function App() {
     setUserSettings(data.userSettings);
     setCheckIns(data.checkIns || []);
     setExerciseSets(data.exerciseSets || []);
+    setBooks(data.books || []);
   }
 
   const renderView = () => {
     const today = getLocalDateString();
     const logForSelectedDate = getLogForDate(selectedDate);
-    const appData: AppData = { logs, customExercises, userSettings, checkIns, exerciseSets };
+    const appData: AppData = { logs, customExercises, userSettings, checkIns, exerciseSets, books };
 
     switch (view) {
       case 'home':
-        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} />;
+        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} onSaveHabit={handleSaveHabit} books={books} />;
       case 'calendar':
         return <CalendarView logs={logs} checkIns={checkIns} setSelectedDate={setSelectedDate} setView={setView} setSelectedCheckInId={setSelectedCheckInId} />;
       case 'routine':
@@ -181,6 +229,13 @@ function App() {
         return <SystemSettings settings={userSettings} setSettings={setUserSettings} appData={appData} onImport={handleImportData} />;
       case 'tracking':
         return <MapView selectedDateLog={getLogForDate(today)} onUpdateLog={updateLogForDate} setView={setView} setSelectedActivityId={setSelectedActivityId}/>;
+      case 'habits-hub':
+        return <HabitsHub setView={setView} />;
+      case 'reading-library':
+        return <ReadingLibraryView books={books} allLogs={logs} setView={setView} setSelectedBookId={setSelectedBookId} onDelete={handleDeleteBook} />;
+      case 'book-form':
+        const bookToEdit = books.find(b => b.id === selectedBookId);
+        return <BookFormView onSave={handleSaveBook} goBack={goBack} bookToEdit={bookToEdit} />;
       case 'activity-summary':
         let selectedActivity: OutdoorRunActivity | undefined;
         for (const log of logs) {
@@ -200,7 +255,7 @@ function App() {
         const selectedCheckIn = checkIns.find(ci => ci.id === selectedCheckInId);
         return <CheckInDetailView checkIn={selectedCheckIn} goBack={goBack} />;
       default:
-        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} />;
+        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} onSaveHabit={handleSaveHabit} books={books} />;
     }
   };
 
@@ -224,6 +279,9 @@ function App() {
         case 'profile-settings': return 'Profile Settings';
         case 'system-settings': return 'System Settings';
         case 'tracking': return 'Start Activity';
+        case 'habits-hub': return 'Habits';
+        case 'reading-library': return 'Reading Library';
+        case 'book-form': return selectedBookId ? 'Edit Book' : 'Add Book';
         case 'activity-summary': return 'Activity Summary';
         case 'check-ins': return 'Check-in History';
         case 'check-in-form':
@@ -243,24 +301,24 @@ function App() {
   const showProfileButton = !showBackButton;
 
   return (
-    <div className="bg-dark-bg text-dark-text font-sans min-h-screen flex flex-col antialiased">
-      <header className="p-4 text-center sticky top-0 z-40 bg-dark-bg/90 backdrop-blur-lg border-b border-white/10">
+    <div className="bg-bg-base dark:bg-dark-bg-base text-text-base dark:text-dark-text-base font-sans min-h-screen flex flex-col antialiased">
+      <header className="p-4 text-center sticky top-0 z-40 bg-bg-base/90 dark:bg-dark-bg-base/90 backdrop-blur-lg border-b border-border-base dark:border-dark-border-base">
          <div className="flex items-center justify-between">
             <div className="w-10">
               {showBackButton && (
-                <button onClick={goBack} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-dark-surface transition-colors" aria-label="Go back">
+                <button onClick={goBack} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-card dark:hover:bg-dark-surface transition-colors" aria-label="Go back">
                   <ChevronLeftIcon className="w-6 h-6" />
                 </button>
               )}
             </div>
-            <h1 className="text-xl font-bold text-dark-text">{getHeaderText()}</h1>
+            <h1 className="text-xl font-bold text-text-base dark:text-dark-text-base">{getHeaderText()}</h1>
             <div className="w-10">
               {showProfileButton && (
-                <button onClick={() => setView('settings-hub')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-dark-surface transition-colors" aria-label="Settings">
+                <button onClick={() => setView('settings-hub')} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-card dark:hover:bg-dark-surface transition-colors" aria-label="Settings">
                     {userSettings.photo ? (
                         <img src={userSettings.photo} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
                     ) : (
-                        <UserCircleIcon className="w-8 h-8 text-dark-text-secondary" />
+                        <UserCircleIcon className="w-8 h-8 text-text-secondary dark:text-dark-text-secondary" />
                     )}
                 </button>
               )}

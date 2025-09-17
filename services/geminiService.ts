@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
-import type { DailyLog, UserSettings, CheckIn } from "../types";
+import type { DailyLog, UserSettings, CheckIn, ReadingHabitLog } from "../types";
+import { HabitType } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -71,6 +72,19 @@ function formatDataForPrompt(logs: DailyLog[], settings: UserSettings, checkIns:
             } else {
                 formattedString += "Workouts: No workout logged.\n";
             }
+
+            if (log.habits && log.habits.length > 0) {
+                formattedString += "Habits:\n";
+                log.habits.forEach(habit => {
+                    if (habit.type === HabitType.Reading) {
+                        const readingHabit = habit as ReadingHabitLog;
+                         formattedString += `- Reading: ${readingHabit.pagesRead} pages in ${readingHabit.durationMinutes} minutes\n`;
+                    } else {
+                         formattedString += `- ${habit.type}: ${habit.durationMinutes} minutes\n`;
+                    }
+                });
+            }
+
             formattedString += "\n";
         });
     } else {

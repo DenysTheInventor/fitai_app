@@ -52,35 +52,35 @@ const SetFormView: React.FC<SetFormViewProps> = ({ onSave, goBack, customExercis
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-dark-surface p-6 rounded-lg space-y-4">
+      <div className="bg-surface dark:bg-dark-surface shadow-sm dark:shadow-none p-6 rounded-lg space-y-4">
         <div>
-          <label htmlFor="setName" className="block text-sm font-medium text-dark-text-secondary mb-1">Set Name</label>
-          <input id="setName" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g., Push Day A" className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text" required />
+          <label htmlFor="setName" className="block text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-1">Set Name</label>
+          <input id="setName" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g., Push Day A" className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2 text-text-base dark:text-dark-text-base" required />
         </div>
       </div>
 
-      <div className="bg-dark-surface p-6 rounded-lg space-y-4">
-        <h3 className="text-lg font-semibold text-white">Exercises in this Set</h3>
+      <div className="bg-surface dark:bg-dark-surface shadow-sm dark:shadow-none p-6 rounded-lg space-y-4">
+        <h3 className="text-lg font-semibold text-text-base dark:text-dark-text-base">Exercises in this Set</h3>
         <div className="flex gap-2">
-            <select value={selectedExercise} onChange={e => setSelectedExercise(e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2 text-dark-text">
+            <select value={selectedExercise} onChange={e => setSelectedExercise(e.target.value)} className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2 text-text-base dark:text-dark-text-base">
                 <option value="">{availableExercises.length > 0 ? 'Select an exercise to add' : 'No more exercises available'}</option>
                 {availableExercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
             </select>
-            <button type="button" onClick={handleAddExercise} disabled={!selectedExercise} className="bg-brand-secondary text-white rounded-md p-2 px-4 font-semibold hover:opacity-90 disabled:opacity-50">Add</button>
+            <button type="button" onClick={handleAddExercise} disabled={!selectedExercise} className="bg-secondary dark:bg-dark-secondary text-white rounded-md p-2 px-4 font-semibold hover:opacity-90 disabled:opacity-50">Add</button>
         </div>
         <div className="space-y-2">
             {exerciseIds.length > 0 ? exerciseIds.map(id => (
-                <div key={id} className="bg-dark-card p-3 rounded-lg flex justify-between items-center">
+                <div key={id} className="bg-card dark:bg-dark-card p-3 rounded-lg flex justify-between items-center">
                     <span>{getExerciseName(id)}</span>
-                    <button type="button" onClick={() => handleRemoveExercise(id)} className="text-dark-text-secondary hover:text-red-500"><TrashIcon className="w-5 h-5"/></button>
+                    <button type="button" onClick={() => handleRemoveExercise(id)} className="text-text-secondary dark:text-dark-text-secondary hover:text-danger"><TrashIcon className="w-5 h-5"/></button>
                 </div>
-            )) : <p className="text-sm text-center text-dark-text-secondary py-2">No exercises added yet.</p>}
+            )) : <p className="text-sm text-center text-text-secondary dark:text-dark-text-secondary py-2">No exercises added yet.</p>}
         </div>
       </div>
       
       <div className="flex gap-4">
-        <button type="button" onClick={goBack} className="w-full bg-dark-card text-dark-text font-bold py-3 rounded-md hover:bg-white/10">Cancel</button>
-        <button type="submit" className="w-full bg-brand-primary text-dark-bg font-bold py-3 rounded-md hover:opacity-90">{setToEdit ? 'Update Set' : 'Save Set'}</button>
+        <button type="button" onClick={goBack} className="w-full bg-card dark:bg-dark-card font-bold py-3 rounded-md hover:bg-card-hover dark:hover:bg-dark-card-hover">Cancel</button>
+        <button type="submit" className="w-full bg-primary dark:bg-dark-primary text-white dark:text-dark-bg-base font-bold py-3 rounded-md hover:opacity-90">{setToEdit ? 'Update Set' : 'Save Set'}</button>
       </div>
     </form>
   );

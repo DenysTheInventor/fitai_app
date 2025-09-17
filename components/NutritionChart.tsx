@@ -56,7 +56,7 @@ const NutritionChart: React.FC<NutritionChartProps> = ({ logs }) => {
         }).reverse();
     
         return (
-            <div className="flex flex-col justify-between text-right h-full text-xs text-dark-text-secondary pr-2">
+            <div className="flex flex-col justify-between text-right h-full text-xs text-text-secondary dark:text-dark-text-secondary pr-2">
                 {labels.map((label, index) => <span key={index}>{label.toLocaleString()}</span>)}
             </div>
         );
@@ -65,7 +65,7 @@ const NutritionChart: React.FC<NutritionChartProps> = ({ logs }) => {
     const ChartGrid: React.FC<{ steps?: number }> = ({ steps = 4 }) => (
         <div className="absolute inset-y-0 left-0 right-0 grid grid-rows-4 -z-10">
             {Array.from({ length: steps }).map((_, i) => (
-                <div key={i} className="border-t border-white/10 first:border-none"></div>
+                <div key={i} className="border-t border-border-base dark:border-dark-border-base first:border-none"></div>
             ))}
         </div>
     );
@@ -74,11 +74,11 @@ const NutritionChart: React.FC<NutritionChartProps> = ({ logs }) => {
         const heightPercentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
         return (
             <div className="flex flex-col items-center w-full h-full">
-                <div className="w-full h-full bg-dark-card rounded-t-md flex items-end">
+                <div className="w-full h-full bg-card dark:bg-dark-card rounded-t-md flex items-end">
                     <div style={{ height: `${heightPercentage}%`, backgroundColor: color }} className="w-full rounded-t-md transition-all duration-500 ease-out"></div>
                 </div>
-                <p className="mt-2 text-sm font-bold text-white text-center">{value.toLocaleString()}{unit}</p>
-                <p className="text-xs text-dark-text-secondary text-center">{label}</p>
+                <p className="mt-2 text-sm font-bold text-text-base dark:text-dark-text-base text-center">{value.toLocaleString()}{unit}</p>
+                <p className="text-xs text-text-secondary dark:text-dark-text-secondary text-center">{label}</p>
             </div>
         );
     };
@@ -97,37 +97,37 @@ const NutritionChart: React.FC<NutritionChartProps> = ({ logs }) => {
     }, [data]);
 
     return (
-        <div className="bg-dark-surface p-4 rounded-lg h-full flex flex-col">
+        <div className="bg-surface dark:bg-dark-surface shadow-sm dark:shadow-none p-4 rounded-lg h-full flex flex-col">
             <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                <h3 className="font-semibold text-lg text-white">Nutrition Averages</h3>
-                <div className="flex gap-1 bg-dark-card p-1 rounded-md">
-                    <button onClick={() => setPeriod('week')} className={`px-3 py-1 text-xs rounded transition-colors ${period === 'week' ? 'bg-brand-secondary text-white' : 'text-dark-text-secondary'}`}>Week</button>
-                    <button onClick={() => setPeriod('month')} className={`px-3 py-1 text-xs rounded transition-colors ${period === 'month' ? 'bg-brand-secondary text-white' : 'text-dark-text-secondary'}`}>Month</button>
+                <h3 className="font-semibold text-lg text-text-base dark:text-dark-text-base">Nutrition Averages</h3>
+                <div className="flex gap-1 bg-card dark:bg-dark-card p-1 rounded-md">
+                    <button onClick={() => setPeriod('week')} className={`px-3 py-1 text-xs rounded transition-colors ${period === 'week' ? 'bg-secondary dark:bg-dark-secondary text-white' : 'text-text-secondary dark:text-dark-text-secondary'}`}>Week</button>
+                    <button onClick={() => setPeriod('month')} className={`px-3 py-1 text-xs rounded transition-colors ${period === 'month' ? 'bg-secondary dark:bg-dark-secondary text-white' : 'text-text-secondary dark:text-dark-text-secondary'}`}>Month</button>
                 </div>
             </div>
 
             {data.averages ? (
                 <div className="space-y-6 flex-grow">
                     <div>
-                        <h4 className="text-md font-semibold text-white text-center mb-2">Average Calories (kcal)</h4>
+                        <h4 className="text-md font-semibold text-text-base dark:text-dark-text-base text-center mb-2">Average Calories (kcal)</h4>
                         <div className="flex h-32">
                             <YAxis maxValue={niceMaxCalories} />
-                            <div className="flex-grow border-b border-l border-white/10 p-2 relative flex justify-center">
+                            <div className="flex-grow border-b border-l border-border-base dark:border-dark-border-base p-2 relative flex justify-center">
                                 <ChartGrid />
                                 <div className="w-1/4 h-full z-20">
-                                    <Bar label="" value={data.averages.calories} unit="" color="#00F5D4" maxValue={niceMaxCalories} />
+                                    <Bar label="" value={data.averages.calories} unit="" color="#3B82F6" maxValue={niceMaxCalories} />
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <h4 className="text-md font-semibold text-white text-center mb-2">Average Macronutrients (g)</h4>
+                        <h4 className="text-md font-semibold text-text-base dark:text-dark-text-base text-center mb-2">Average Macronutrients (g)</h4>
                         <div className="flex h-32">
                             <YAxis maxValue={niceMaxMacros} />
-                            <div className="flex-grow border-b border-l border-white/10 p-2 relative flex justify-around gap-3">
+                            <div className="flex-grow border-b border-l border-border-base dark:border-dark-border-base p-2 relative flex justify-around gap-3">
                                 <ChartGrid />
-                                <div className="flex-1 h-full z-20"><Bar label="Protein" value={data.averages.protein} unit="g" color="#9B5DE5" maxValue={niceMaxMacros} /></div>
+                                <div className="flex-1 h-full z-20"><Bar label="Protein" value={data.averages.protein} unit="g" color="#6D28D9" maxValue={niceMaxMacros} /></div>
                                 <div className="flex-1 h-full z-20"><Bar label="Carbs" value={data.averages.carbs} unit="g" color="#F15BB5" maxValue={niceMaxMacros} /></div>
                                 <div className="flex-1 h-full z-20"><Bar label="Fats" value={data.averages.fats} unit="g" color="#FEE440" maxValue={niceMaxMacros} /></div>
                                 <div className="flex-1 h-full z-20"><Bar label="Sugar" value={data.averages.sugar} unit="g" color="#00BBF9" maxValue={niceMaxMacros} /></div>
@@ -137,7 +137,7 @@ const NutritionChart: React.FC<NutritionChartProps> = ({ logs }) => {
                 </div>
             ) : (
                 <div className="flex-grow flex items-center justify-center text-center">
-                    <p className="text-dark-text-secondary text-sm">No nutrition data available for the<br/>selected period.</p>
+                    <p className="text-text-secondary dark:text-dark-text-secondary text-sm">No nutrition data available for the<br/>selected period.</p>
                 </div>
             )}
         </div>

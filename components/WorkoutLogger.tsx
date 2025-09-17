@@ -13,26 +13,26 @@ interface WorkoutLoggerProps {
 
 const WorkoutCard: React.FC<{ activity: WorkoutActivity, onDelete: () => void }> = ({ activity, onDelete }) => {
     return (
-        <div className="bg-dark-card p-4 rounded-lg shadow-md relative">
-            <button onClick={onDelete} className="absolute top-2 right-2 text-dark-text-secondary hover:text-red-500 transition-colors">
+        <div className="bg-card dark:bg-dark-card p-4 rounded-lg shadow-md relative">
+            <button onClick={onDelete} className="absolute top-2 right-2 text-text-secondary dark:text-dark-text-secondary hover:text-danger transition-colors">
                 <TrashIcon className="w-5 h-5" />
             </button>
-            <h3 className="font-bold text-brand-primary mb-2">{activity.name}</h3>
+            <h3 className="font-bold text-primary dark:text-dark-primary mb-2">{activity.name}</h3>
             {activity.type === ActivityType.WeightLifting && (
                 <ul className="space-y-1 text-sm">
                     {activity.sets.map((set, index) => (
                         <li key={index} className="flex justify-between">
                             <span>Set {index + 1}</span>
-                            <span className="text-dark-text-secondary">{set.reps} reps @ {set.weight} kg</span>
+                            <span className="text-text-secondary dark:text-dark-text-secondary">{set.reps} reps @ {set.weight} kg</span>
                         </li>
                     ))}
                 </ul>
             )}
             {activity.type === ActivityType.Cardio && (
-                 <p className="text-dark-text-secondary">{activity.steps} steps</p>
+                 <p className="text-text-secondary dark:text-dark-text-secondary">{activity.steps} steps</p>
             )}
             {activity.type === ActivityType.Sport && (
-                 <p className="text-dark-text-secondary">{activity.durationMinutes} minutes</p>
+                 <p className="text-text-secondary dark:text-dark-text-secondary">{activity.durationMinutes} minutes</p>
             )}
         </div>
     );
@@ -194,24 +194,24 @@ const AddWorkoutModal: React.FC<{
     const LastPerformanceHint: React.FC<{perf: Set[] | null}> = ({perf}) => {
         if (!perf || perf.length === 0) return null;
         const summary = `${perf.length} sets of ${perf[0].reps} reps @ ${perf[0].weight}kg`;
-        return <p className="text-xs text-dark-text-secondary mt-1">Last: {summary}</p>;
+        return <p className="text-xs text-text-secondary dark:text-dark-text-secondary mt-1">Last: {summary}</p>;
     }
     
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-dark-surface rounded-lg p-6 w-full max-w-md shadow-xl overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-                <h2 className="text-xl font-bold mb-4 text-white">Add New Workout</h2>
+            <div className="bg-surface dark:bg-dark-surface rounded-lg p-6 w-full max-w-md shadow-xl overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+                <h2 className="text-xl font-bold mb-4 text-text-base dark:text-dark-text-base">Add New Workout</h2>
                 
-                <div className="flex gap-2 mb-4 bg-dark-card p-1 rounded-md">
-                    <button onClick={() => setLogMode('single')} className={`w-full p-2 rounded text-sm font-semibold ${logMode === 'single' ? 'bg-brand-secondary text-white' : 'text-dark-text-secondary'}`}>Single Exercise</button>
-                    <button onClick={() => setLogMode('set')} className={`w-full p-2 rounded text-sm font-semibold ${logMode === 'set' ? 'bg-brand-secondary text-white' : 'text-dark-text-secondary'}`}>From Set</button>
+                <div className="flex gap-2 mb-4 bg-card dark:bg-dark-card p-1 rounded-md">
+                    <button onClick={() => setLogMode('single')} className={`w-full p-2 rounded text-sm font-semibold ${logMode === 'single' ? 'bg-secondary dark:bg-dark-secondary text-white' : 'text-text-secondary dark:text-dark-text-secondary'}`}>Single Exercise</button>
+                    <button onClick={() => setLogMode('set')} className={`w-full p-2 rounded text-sm font-semibold ${logMode === 'set' ? 'bg-secondary dark:bg-dark-secondary text-white' : 'text-text-secondary dark:text-dark-text-secondary'}`}>From Set</button>
                 </div>
 
                 {logMode === 'single' ? (
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-dark-text-secondary mb-1">Activity Type</label>
-                            <select value={activityType} onChange={e => handleActivityTypeChange(e.target.value as ActivityType)} className="w-full bg-dark-card border border-white/20 rounded-md p-2">
+                            <label className="block text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-1">Activity Type</label>
+                            <select value={activityType} onChange={e => handleActivityTypeChange(e.target.value as ActivityType)} className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2">
                                 <option value={ActivityType.WeightLifting}>Weight Lifting</option>
                                 <option value={ActivityType.Cardio}>Cardio</option>
                                 <option value={ActivityType.Sport}>Sport</option>
@@ -220,11 +220,11 @@ const AddWorkoutModal: React.FC<{
 
                         {activityType === ActivityType.WeightLifting ? (
                             <div>
-                                <label className="block text-sm font-medium text-dark-text-secondary mb-1">Exercise</label>
+                                <label className="block text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-1">Exercise</label>
                                 <select 
                                     value={name} 
                                     onChange={e => setName(e.target.value)} 
-                                    className="w-full bg-dark-card border border-white/20 rounded-md p-2"
+                                    className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2"
                                     required 
                                 >
                                     {customExercises.length > 0 ? 
@@ -236,12 +236,12 @@ const AddWorkoutModal: React.FC<{
                             </div>
                         ) : (
                             <div>
-                                <label className="block text-sm font-medium text-dark-text-secondary mb-1">Name</label>
+                                <label className="block text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-1">Name</label>
                                 <input 
                                     type="text" 
                                     value={name} 
                                     onChange={e => setName(e.target.value)} 
-                                    className="w-full bg-dark-card border border-white/20 rounded-md p-2" 
+                                    className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2" 
                                     placeholder={activityType === ActivityType.Cardio ? "e.g., Treadmill" : "e.g., Basketball"}
                                 />
                             </div>
@@ -251,51 +251,51 @@ const AddWorkoutModal: React.FC<{
                            <div className="space-y-2">
                              {singleExSets.map((set, i) => (
                                 <div key={i} className="flex gap-2 items-center">
-                                   <input type="number" value={set.reps} onChange={e => setSingleExSets(s => s.map((x, j) => j === i ? {...x, reps: +e.target.value} : x))} className="w-full bg-dark-card border border-white/20 rounded-md p-2" placeholder="Reps" />
-                                   <input type="number" value={set.weight} onChange={e => setSingleExSets(s => s.map((x, j) => j === i ? {...x, weight: +e.target.value} : x))} className="w-full bg-dark-card border border-white/20 rounded-md p-2" placeholder="Weight (kg)" />
+                                   <input type="number" value={set.reps} onChange={e => setSingleExSets(s => s.map((x, j) => j === i ? {...x, reps: +e.target.value} : x))} className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2" placeholder="Reps" />
+                                   <input type="number" value={set.weight} onChange={e => setSingleExSets(s => s.map((x, j) => j === i ? {...x, weight: +e.target.value} : x))} className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2" placeholder="Weight (kg)" />
                                 </div>
                              ))}
-                             <button onClick={() => setSingleExSets(s => [...s, {reps: 8, weight: 20}])} className="text-sm text-brand-primary hover:underline">Add Set</button>
+                             <button onClick={() => setSingleExSets(s => [...s, {reps: 8, weight: 20}])} className="text-sm text-primary dark:text-dark-primary hover:underline">Add Set</button>
                            </div>
                         )}
                         {activityType === ActivityType.Cardio && (
                             <div>
-                                <label className="block text-sm font-medium text-dark-text-secondary mb-1">Steps</label>
-                                <input type="number" value={steps} onChange={e => setSteps(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" placeholder="Steps" />
+                                <label className="block text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-1">Steps</label>
+                                <input type="number" value={steps} onChange={e => setSteps(+e.target.value)} className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2" placeholder="Steps" />
                             </div>
                         )}
                         {activityType === ActivityType.Sport && (
                             <div>
-                                <label className="block text-sm font-medium text-dark-text-secondary mb-1">Duration (Minutes)</label>
-                                <input type="number" value={duration} onChange={e => setDuration(+e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2" placeholder="Duration (mins)" />
+                                <label className="block text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-1">Duration (Minutes)</label>
+                                <input type="number" value={duration} onChange={e => setDuration(+e.target.value)} className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2" placeholder="Duration (mins)" />
                             </div>
                         )}
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <select value={selectedSetId} onChange={e => handleSetSelection(e.target.value)} className="w-full bg-dark-card border border-white/20 rounded-md p-2">
+                        <select value={selectedSetId} onChange={e => handleSetSelection(e.target.value)} className="w-full bg-card dark:bg-dark-card border border-border-base dark:border-dark-border-base rounded-md p-2">
                             <option value="">Select a Set</option>
                             {exerciseSets.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                         {selectedSet && exercisesInSet.map(ex => (
-                            <div key={ex.id} className="bg-dark-card p-3 rounded-lg space-y-2">
-                                <h4 className="font-semibold text-white">{ex.name}</h4>
+                            <div key={ex.id} className="bg-card dark:bg-dark-card p-3 rounded-lg space-y-2">
+                                <h4 className="font-semibold text-text-base dark:text-dark-text-base">{ex.name}</h4>
                                 <LastPerformanceHint perf={findLastPerformance(ex.name, allLogs, selectedDate)} />
                                 {setPerformances[ex.id]?.map((set, i) => (
                                     <div key={i} className="flex gap-2">
-                                        <input type="number" value={set.reps} onChange={e => updateSetPerformance(ex.id, i, 'reps', +e.target.value)} className="w-full bg-dark-surface border border-white/20 rounded-md p-2" placeholder="Reps" />
-                                        <input type="number" value={set.weight} onChange={e => updateSetPerformance(ex.id, i, 'weight', +e.target.value)} className="w-full bg-dark-surface border border-white/20 rounded-md p-2" placeholder="Weight (kg)" />
+                                        <input type="number" value={set.reps} onChange={e => updateSetPerformance(ex.id, i, 'reps', +e.target.value)} className="w-full bg-surface dark:bg-dark-surface border border-border-base dark:border-dark-border-base rounded-md p-2" placeholder="Reps" />
+                                        <input type="number" value={set.weight} onChange={e => updateSetPerformance(ex.id, i, 'weight', +e.target.value)} className="w-full bg-surface dark:bg-dark-surface border border-border-base dark:border-dark-border-base rounded-md p-2" placeholder="Weight (kg)" />
                                     </div>
                                 ))}
-                                <button onClick={() => addSetToPerformance(ex.id)} className="text-sm text-brand-primary hover:underline">Add Set</button>
+                                <button onClick={() => addSetToPerformance(ex.id)} className="text-sm text-primary dark:text-dark-primary hover:underline">Add Set</button>
                             </div>
                         ))}
                     </div>
                 )}
 
                 <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={onClose} className="px-4 py-2 rounded-md bg-dark-card text-dark-text hover:bg-white/10 transition-colors">Cancel</button>
-                    <button onClick={handleSubmit} className="px-4 py-2 rounded-md bg-brand-primary text-dark-bg font-semibold hover:opacity-90 transition-opacity">Add Activity</button>
+                    <button onClick={onClose} className="px-4 py-2 rounded-md bg-card dark:bg-dark-card text-text-base dark:text-dark-text-base hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors">Cancel</button>
+                    <button onClick={handleSubmit} className="px-4 py-2 rounded-md bg-primary dark:bg-dark-primary text-white dark:text-dark-bg-base font-semibold hover:opacity-90 transition-opacity">Add Activity</button>
                 </div>
             </div>
         </div>
@@ -317,7 +317,7 @@ const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({ selectedDateLog, onUpdate
 
     return (
         <div className="space-y-4">
-             <h2 className="text-xl font-semibold text-white">Workout Routine</h2>
+             <h2 className="text-xl font-semibold text-text-base dark:text-dark-text-base">Workout Routine</h2>
              {selectedDateLog.workouts.length > 0 ? (
                 <div className="space-y-3">
                     {selectedDateLog.workouts.map((activity) => (
@@ -325,13 +325,13 @@ const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({ selectedDateLog, onUpdate
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-10 px-4 bg-dark-surface rounded-lg">
-                    <p className="text-dark-text-secondary">No workouts logged for this day.</p>
-                    <p className="text-dark-text-secondary text-sm">Tap the button below to add one.</p>
+                <div className="text-center py-10 px-4 bg-surface dark:bg-dark-surface rounded-lg">
+                    <p className="text-text-secondary dark:text-dark-text-secondary">No workouts logged for this day.</p>
+                    <p className="text-text-secondary dark:text-dark-text-secondary text-sm">Tap the button below to add one.</p>
                 </div>
             )}
              
-             <button onClick={() => setIsModalOpen(true)} className="fixed bottom-24 right-4 bg-brand-secondary rounded-full p-4 shadow-lg hover:scale-105 transition-transform">
+             <button onClick={() => setIsModalOpen(true)} className="fixed bottom-24 right-4 bg-secondary dark:bg-dark-secondary rounded-full p-4 shadow-lg hover:scale-105 transition-transform">
                 <PlusIcon className="w-8 h-8 text-white"/>
              </button>
 
