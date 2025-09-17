@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet, OutdoorRunActivity, HabitLog, Book, ReadingHabitLog } from './types';
 import { ActivityType, HabitType } from './types';
@@ -55,6 +55,23 @@ function App() {
   const [checkIns, setCheckIns] = useLocalStorage<CheckIn[]>('fitai-checkins', []);
   const [exerciseSets, setExerciseSets] = useLocalStorage<ExerciseSet[]>('fitai-sets', []);
   const [books, setBooks] = useLocalStorage<Book[]>('fitai-books', []);
+
+  // This effect runs once on startup to migrate any old log data.
+  // It ensures that every log object has a `habits` array, providing
+  // backward compatibility with data stored before the habits feature was added.
+  useEffect(() => {
+    // Check if any log is missing the 'habits' property.
+    const needsMigration = logs.some(log => !log.hasOwnProperty('habits'));
+    
+    if (needsMigration) {
+      console.log("Migrating log data to new version...");
+      const migratedLogs = logs.map(log => ({
+        ...log,
+        habits: log.habits || [], // Add empty habits array if missing
+      }));
+      setLogs(migratedLogs);
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount.
   
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const [selectedCheckInId, setSelectedCheckInId] = useState<string | null>(null);
