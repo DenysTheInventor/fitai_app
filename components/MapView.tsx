@@ -183,7 +183,7 @@ const MapView: React.FC<MapViewProps> = ({ selectedDateLog, onUpdateLog, setView
             {/* Map Overlays (like the theme button) */}
             <div className="absolute top-28 left-4 z-10">
                  <button 
-                    // FIX: Changed from functional update `(prev => ...)` to direct value update to match the context's type definition for `setTheme`.
+                    // FIX: Set theme directly based on the current theme value to match context type.
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                     className="bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-md w-10 h-10 flex items-center justify-center rounded-full text-text-secondary dark:text-dark-text-secondary hover:bg-card-hover dark:hover:bg-dark-card hover:text-text-base dark:hover:text-dark-text-base transition-colors shadow-lg"
                     aria-label="Toggle map theme"

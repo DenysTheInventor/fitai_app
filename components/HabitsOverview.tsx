@@ -1,157 +1,167 @@
-import React, { useState, useMemo } from 'react';
-import type { DailyLog, CustomHabit, GenericHabitLog } from '../types';
+import React from 'react';
+import type { DailyLog, CustomHabit, ReadingHabitLog, GenericHabitLog } from '../types';
 import { HabitType } from '../types';
-import { CheckIcon, XIcon, DownloadIcon } from '../constants';
-
-// Make jsPDF available from the global scope (since it's loaded via CDN)
-declare const jspdf: any;
+import { BookOpenIcon, LanguageIcon, PencilSquareIcon, SparklesIcon } from '../constants';
 
 interface HabitsOverviewProps {
   logs: DailyLog[];
   customHabits: CustomHabit[];
 }
 
-const HabitsOverview: React.FC<HabitsOverviewProps> = ({ logs, customHabits }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-
-  const changeMonth = (offset: number) => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
-  };
-
-  const { daysInMonth, monthName, year, habitData } = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const monthName = currentDate.toLocaleString('default', { month: 'long' });
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    const habitList = [
-      { id: HabitType.English, name: 'English Learning' },
-      { id: HabitType.Reading, name: 'Reading' },
-      { id: HabitType.Blogging, name: 'Blogging' },
-      ...customHabits,
-    ];
-
-    const logsForMonth = logs.filter(log => {
-        const logDate = new Date(log.date + 'T00:00:00');
-        return logDate.getFullYear() === year && logDate.getMonth() === month;
+const getHabitStats = (logs: DailyLog[], habitType: HabitType, customHabitId?: string) => {
+    let totalMinutes = 0;
+    let daysTracked = 0;
+    const trackedDates = new Set<string>();
+  
+    logs.forEach(log => {
+      const habitsForDay = log.habits.filter(h => {
+        if (h.type !== habitType) return false;
+        if (habitType === HabitType.Custom) {
+            return (h as GenericHabitLog).customHabitId === customHabitId;
+        }
+        return true;
+      });
+  
+      if (habitsForDay.length > 0) {
+        trackedDates.add(log.date);
+        habitsForDay.forEach(h => {
+          totalMinutes += h.durationMinutes;
+        });
+      }
     });
+  
+    daysTracked = trackedDates.size;
+  
+    // Calculate streak
+    let currentStreak = 0;
+    if (daysTracked > 0) {
+        const sortedDates = Array.from(trackedDates).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        
+        let lastDate = new Date(sortedDates[0] + 'T00:00:00');
+        
+        if (lastDate.getTime() === today.getTime() || lastDate.getTime() === yesterday.getTime()) {
+            currentStreak = 1;
+            for (let i = 1; i < sortedDates.length; i++) {
+                const currentDate = new Date(sortedDates[i] + 'T00:00:00');
+                const expectedPreviousDate = new Date(lastDate);
+                expectedPreviousDate.setDate(lastDate.getDate() - 1);
 
-    const logsByDate = new Map(logsForMonth.map(log => [new Date(log.date + 'T00:00:00').getDate(), log]));
-
-    const habitData = habitList.map(habit => {
-        const statuses: boolean[] = [];
-        for (let day = 1; day <= daysInMonth; day++) {
-            const log = logsByDate.get(day);
-            if (log) {
-                const isLogged = log.habits.some(h => {
-                    if (h.type === HabitType.Custom) {
-                        return (h as GenericHabitLog).customHabitId === habit.id;
-                    }
-                    return h.type === habit.id;
-                });
-                statuses.push(isLogged);
-            } else {
-                statuses.push(false);
+                if (currentDate.getTime() === expectedPreviousDate.getTime()) {
+                    currentStreak++;
+                    lastDate = currentDate;
+                } else {
+                    break;
+                }
             }
         }
-        return { ...habit, statuses };
-    });
-
-    return { daysInMonth, monthName, year, habitData };
-  }, [currentDate, logs, customHabits]);
-  
-  const handleExportPdf = () => {
-    const { jsPDF } = jspdf;
-    const doc = new jsPDF({
-      orientation: 'landscape',
-      unit: 'pt',
-      format: 'a4'
-    });
-
-    const title = `Habit Overview - ${monthName} ${year}`;
-    const cellPadding = 5;
-    const headerHeight = 30;
-    const rowHeight = 25;
-    const habitColWidth = 150;
-    const dateColWidth = 20;
-    const margin = 40;
-    
-    // Title
-    doc.setFontSize(18);
-    doc.text(title, margin, margin + 10);
-    
-    // Table Header
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    let x = margin + habitColWidth;
-    doc.text('Habit', margin + cellPadding, margin + headerHeight - cellPadding);
-    for (let day = 1; day <= daysInMonth; day++) {
-        doc.text(String(day), x + dateColWidth / 2, margin + headerHeight - cellPadding, { align: 'center' });
-        x += dateColWidth;
     }
     
-    // Table Body
-    doc.setFont('helvetica', 'normal');
-    let y = margin + headerHeight;
-    habitData.forEach(habit => {
-        doc.text(habit.name, margin + cellPadding, y + rowHeight / 2 + 5);
-        let x = margin + habitColWidth;
-        habit.statuses.forEach(isLogged => {
-            if(isLogged) {
-                doc.setTextColor('#10B981');
-                doc.text('✔', x + dateColWidth / 2, y + rowHeight / 2 + 5, { align: 'center' });
-            } else {
-                 doc.setTextColor('#EF4444');
-                 doc.text('❌', x + dateColWidth / 2, y + rowHeight / 2 + 5, { align: 'center' });
-            }
-            doc.setTextColor('#000000');
-            x += dateColWidth;
+    // Total pages for reading
+    let totalPagesRead = 0;
+    if (habitType === HabitType.Reading) {
+        logs.forEach(log => {
+            log.habits.forEach(h => {
+                if (h.type === HabitType.Reading) {
+                    totalPagesRead += (h as ReadingHabitLog).pagesRead;
+                }
+            });
         });
-        y += rowHeight;
-    });
+    }
 
-    doc.save(`habit-overview-${year}-${monthName}.pdf`);
-  };
+    return { totalMinutes, daysTracked, currentStreak, totalPagesRead };
+};
 
-  return (
-    <div className="bg-surface dark:bg-dark-surface shadow-sm dark:shadow-none rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-card dark:hover:bg-dark-card transition-colors" aria-label="Previous month">&lt;</button>
-        <h2 className="text-lg font-bold text-text-base dark:text-dark-text-base">
-          {monthName} {year}
-        </h2>
-        <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-card dark:hover:bg-dark-card transition-colors" aria-label="Next month">&gt;</button>
-      </div>
-      
-      <button onClick={handleExportPdf} className="w-full flex items-center justify-center gap-2 mb-4 bg-card dark:bg-dark-card text-text-base dark:text-dark-text-base font-semibold py-2 rounded-md hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors">
-          <DownloadIcon className="w-5 h-5"/>
-          Export as PDF
-      </button>
-
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className="inline-block min-w-full">
-          {/* Header Row */}
-          <div className="flex bg-card dark:bg-dark-card rounded-t-lg sticky top-0">
-            <div className="p-2 text-sm font-semibold text-text-base dark:text-dark-text-base sticky left-0 z-10 bg-card dark:bg-dark-card w-32 md:w-40 flex-shrink-0">Habit</div>
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
-              <div key={day} className="w-9 flex-shrink-0 text-center p-2 text-sm font-semibold text-text-base dark:text-dark-text-base">{day}</div>
-            ))}
-          </div>
-          {/* Body Rows */}
-          {habitData.map((habit, index) => (
-            <div key={habit.id} className={`flex ${index === habitData.length - 1 ? 'rounded-b-lg' : ''}`}>
-              <div className="p-2 text-sm font-medium text-text-base dark:text-dark-text-base sticky left-0 z-10 bg-surface dark:bg-dark-surface border-b border-r border-border-base dark:border-dark-border-base w-32 md:w-40 flex-shrink-0 truncate">{habit.name}</div>
-              {habit.statuses.map((isLogged, dayIndex) => (
-                <div key={dayIndex} className="w-9 flex-shrink-0 flex items-center justify-center p-2 border-b border-border-base dark:border-dark-border-base">
-                  {isLogged ? <CheckIcon className="w-5 h-5 text-success" /> : <XIcon className="w-4 h-4 text-danger opacity-50" />}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
+const StatCard: React.FC<{ label: string; value: string | number; unit?: string; }> = ({ label, value, unit }) => (
+    <div className="bg-card dark:bg-dark-card p-3 rounded-md text-center">
+        <p className="font-bold text-xl text-primary dark:text-dark-primary">
+            {value}
+            {unit && <span className="text-sm text-text-secondary dark:text-dark-text-secondary ml-1">{unit}</span>}
+        </p>
+        <p className="text-xs text-text-secondary dark:text-dark-text-secondary">{label}</p>
     </div>
-  );
+);
+
+const HabitOverviewCard: React.FC<{
+    title: string;
+    icon: React.ReactNode;
+    stats: ReturnType<typeof getHabitStats>;
+}> = ({ title, icon, stats }) => (
+    <div className="bg-surface dark:bg-dark-surface shadow-sm dark:shadow-none rounded-lg p-4">
+        <div className="flex items-center gap-3 mb-4">
+            {icon}
+            <h3 className="font-bold text-lg text-text-base dark:text-dark-text-base">{title}</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <StatCard label="Current Streak" value={stats.currentStreak} unit="days" />
+            <StatCard label="Total Days" value={stats.daysTracked} />
+            <StatCard label="Total Time" value={Math.round(stats.totalMinutes / 60)} unit="hours" />
+            {stats.totalPagesRead > 0 && (
+                <StatCard label="Pages Read" value={stats.totalPagesRead} />
+            )}
+        </div>
+    </div>
+);
+
+
+const HabitsOverview: React.FC<HabitsOverviewProps> = ({ logs, customHabits }) => {
+    
+    const readingStats = getHabitStats(logs, HabitType.Reading);
+    const englishStats = getHabitStats(logs, HabitType.English);
+    const bloggingStats = getHabitStats(logs, HabitType.Blogging);
+    
+    const customHabitStats = customHabits.map(habit => ({
+        ...habit,
+        stats: getHabitStats(logs, HabitType.Custom, habit.id)
+    }));
+
+    const hasAnyHabits = readingStats.daysTracked > 0 || englishStats.daysTracked > 0 || bloggingStats.daysTracked > 0 || customHabitStats.some(h => h.stats.daysTracked > 0);
+
+    if (!hasAnyHabits) {
+        return (
+            <div className="text-center py-10 px-4 bg-surface dark:bg-dark-surface rounded-lg">
+              <p className="text-text-secondary dark:text-dark-text-secondary">No habit data found.</p>
+              <p className="text-text-secondary dark:text-dark-text-secondary text-sm">Log some habits to see an overview here.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {readingStats.daysTracked > 0 && (
+                <HabitOverviewCard 
+                    title="Reading"
+                    icon={<BookOpenIcon className="w-6 h-6 text-yellow-500"/>}
+                    stats={readingStats}
+                />
+            )}
+            {englishStats.daysTracked > 0 && (
+                 <HabitOverviewCard 
+                    title="English"
+                    icon={<LanguageIcon className="w-6 h-6 text-blue-500"/>}
+                    stats={englishStats}
+                />
+            )}
+            {bloggingStats.daysTracked > 0 && (
+                 <HabitOverviewCard 
+                    title="Blogging"
+                    icon={<PencilSquareIcon className="w-6 h-6 text-green-500"/>}
+                    stats={bloggingStats}
+                />
+            )}
+            {customHabitStats.filter(h => h.stats.daysTracked > 0).map(habit => (
+                 <HabitOverviewCard 
+                    key={habit.id}
+                    title={habit.name}
+                    icon={<SparklesIcon className="w-6 h-6 text-secondary dark:text-dark-secondary"/>}
+                    stats={habit.stats}
+                />
+            ))}
+        </div>
+    );
 };
 
 export default HabitsOverview;

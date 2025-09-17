@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import type { DailyLog, View, CheckIn, ReadingHabitLog } from '../types';
+// FIX: Added CustomHabit to the type import.
+import type { DailyLog, View, CheckIn, ReadingHabitLog, CustomHabit } from '../types';
 import { HabitType } from '../types';
 import { PlusIcon, DumbbellIcon, ForkKnifeIcon, MoonIcon, CheckBadgeIcon, CalendarIcon, CalendarWeekIcon, LanguageIcon, BookOpenIcon, PencilSquareIcon } from '../constants';
-// FIX: Import HabitToLogType to correctly type the setHabitToLog prop.
 import type { HabitToLogType } from '../App';
 
 interface CalendarViewProps {
@@ -11,7 +11,8 @@ interface CalendarViewProps {
   setSelectedDate: (date: string) => void;
   setView: (view: View) => void;
   setSelectedCheckInId: (id: string | null) => void;
-  // FIX: Update prop type to match the state setter from App.tsx.
+  // FIX: Added customHabits prop to align with its usage in App.tsx.
+  customHabits: CustomHabit[];
   setHabitToLog: (habit: HabitToLogType | null) => void;
 }
 
@@ -221,7 +222,8 @@ const DayLogDisplay: React.FC<{
                         const iconMap = {
                             [HabitType.English]: <LanguageIcon className="w-4 h-4 text-blue-500 inline mr-2"/>,
                             [HabitType.Reading]: <BookOpenIcon className="w-4 h-4 text-yellow-500 inline mr-2"/>,
-                            [HabitType.Blogging]: <PencilSquareIcon className="w-4 h-4 text-green-500 inline mr-2"/>
+                            [HabitType.Blogging]: <PencilSquareIcon className="w-4 h-4 text-green-500 inline mr-2"/>,
+                            [HabitType.Custom]: <></>
                         };
                         const readingDetails = h.type === HabitType.Reading ? `(${(h as ReadingHabitLog).pagesRead} pages)` : '';
                         return <div key={h.id} className="flex items-center">{iconMap[h.type]} {h.type}: {h.durationMinutes} min {readingDetails}</div>
@@ -304,7 +306,7 @@ const MonthView: React.FC<{
 };
 
 
-const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelectedDate, setView, setSelectedCheckInId, setHabitToLog }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelectedDate, setView, setSelectedCheckInId, customHabits, setHabitToLog }) => {
   const [calendarMode, setCalendarMode] = useState<'week' | 'month'>('week');
   const [selectedDateInternal, setSelectedDateInternal] = useState(getLocalDateString(new Date()));
   const [displayMonth, setDisplayMonth] = useState(new Date());
@@ -321,7 +323,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelected
   
   const handleChoice = (choice: 'routine' | 'nutrition' | 'sleep' | 'check-in-form' | HabitType) => {
     if (Object.values(HabitType).includes(choice as HabitType)) {
-        // FIX: Pass a HabitToLogType object instead of just the HabitType string.
         setHabitToLog({ type: choice as HabitType });
     } else if (choice === 'check-in-form') {
       setSelectedCheckInId(null);
