@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import type { DailyLog, UserSettings, CheckIn, ReadingHabitLog } from "../types";
+import type { DailyLog, UserSettings, CheckIn, ReadingHabitLog, GenericHabitLog } from "../types";
 import { HabitType } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -80,7 +80,14 @@ function formatDataForPrompt(logs: DailyLog[], settings: UserSettings, checkIns:
                         const readingHabit = habit as ReadingHabitLog;
                          formattedString += `- Reading: ${readingHabit.pagesRead} pages in ${readingHabit.durationMinutes} minutes\n`;
                     } else {
-                         formattedString += `- ${habit.type}: ${habit.durationMinutes} minutes\n`;
+                         const genericHabit = habit as GenericHabitLog;
+                         let habitString = `- ${genericHabit.type}: ${genericHabit.durationMinutes} minutes`;
+                         if (genericHabit.notes) {
+                            habitString += ` (Notes: ${genericHabit.notes})\n`;
+                         } else {
+                            habitString += `\n`;
+                         }
+                         formattedString += habitString;
                     }
                 });
             }

@@ -9,6 +9,7 @@ interface CalendarViewProps {
   setSelectedDate: (date: string) => void;
   setView: (view: View) => void;
   setSelectedCheckInId: (id: string | null) => void;
+  setHabitToLog: (habit: HabitType | null) => void;
 }
 
 const getLocalDateString = (d: Date): string => {
@@ -21,7 +22,7 @@ const getLocalDateString = (d: Date): string => {
 const AddLogChoiceModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
-    onChoice: (view: 'routine' | 'nutrition' | 'sleep' | 'check-in-form') => void;
+    onChoice: (view: 'routine' | 'nutrition' | 'sleep' | 'check-in-form' | HabitType) => void;
     isMonday: boolean;
     canAddCheckIn: boolean;
 }> = ({ isOpen, onClose, onChoice, isMonday, canAddCheckIn }) => {
@@ -30,7 +31,7 @@ const AddLogChoiceModal: React.FC<{
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-surface dark:bg-dark-surface rounded-lg p-6 w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
-                <h2 className="text-xl font-bold mb-6 text-center text-text-base dark:text-dark-text-base">Что вы хотите отследить?</h2>
+                <h2 className="text-xl font-bold mb-6 text-center text-text-base dark:text-dark-text-base">What do you want to log?</h2>
                 <div className="space-y-4">
                      {isMonday && canAddCheckIn && (
                         <button
@@ -38,29 +39,51 @@ const AddLogChoiceModal: React.FC<{
                             className="w-full flex items-center justify-center gap-3 text-lg bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors"
                         >
                             <CheckBadgeIcon className="w-8 h-8 text-green-500" />
-                            <span>Добавить Check-in</span>
+                            <span>Add Check-in</span>
                         </button>
                     )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <button onClick={() => onChoice(HabitType.Reading)} className="flex flex-col items-center justify-center gap-2 bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors aspect-square">
+                            <BookOpenIcon className="w-8 h-8 text-yellow-500"/>
+                            <span className="font-semibold">Reading</span>
+                        </button>
+                        <button onClick={() => onChoice(HabitType.English)} className="flex flex-col items-center justify-center gap-2 bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors aspect-square">
+                            <LanguageIcon className="w-8 h-8 text-blue-500"/>
+                            <span className="font-semibold">English</span>
+                        </button>
+                        <button onClick={() => onChoice(HabitType.Blogging)} className="flex flex-col items-center justify-center gap-2 bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors aspect-square">
+                            <PencilSquareIcon className="w-8 h-8 text-green-500"/>
+                            <span className="font-semibold">Blogging</span>
+                        </button>
+                    </div>
+
+                    <div className="relative flex py-2 items-center">
+                        <div className="flex-grow border-t border-border-base dark:border-dark-border-base"></div>
+                        <span className="flex-shrink mx-4 text-text-secondary dark:text-dark-text-secondary text-sm">Or</span>
+                        <div className="flex-grow border-t border-border-base dark:border-dark-border-base"></div>
+                    </div>
+
                     <button
                         onClick={() => onChoice('routine')}
                         className="w-full flex items-center justify-center gap-3 text-lg bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors"
                     >
                         <DumbbellIcon className="w-8 h-8 text-secondary dark:text-dark-secondary" />
-                        <span>Тренировка</span>
+                        <span>Workout</span>
                     </button>
                     <button
                         onClick={() => onChoice('nutrition')}
                         className="w-full flex items-center justify-center gap-3 text-lg bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors"
                     >
                         <ForkKnifeIcon className="w-8 h-8 text-primary dark:text-dark-primary" />
-                        <span>Питание</span>
+                        <span>Nutrition</span>
                     </button>
                     <button
                         onClick={() => onChoice('sleep')}
                         className="w-full flex items-center justify-center gap-3 text-lg bg-card dark:bg-dark-card p-4 rounded-lg hover:bg-card-hover dark:hover:bg-dark-card-hover transition-colors"
                     >
                         <MoonIcon className="w-8 h-8 text-blue-500" />
-                        <span>Сон</span>
+                        <span>Sleep</span>
                     </button>
                 </div>
             </div>
@@ -106,7 +129,7 @@ const WeeklyScroller: React.FC<{
                 const hasWorkout = logForDay && logForDay.workouts.length > 0;
                 const hasNutrition = logForDay && logForDay.nutrition;
                 const hasSleep = logForDay && logForDay.sleep;
-                const hasHabits = logForDay && logForDay.habits.length > 0;
+                const hasHabits = logForDay && (logForDay.habits || []).length > 0;
 
                 return (
                     <button
@@ -157,13 +180,13 @@ const DayLogDisplay: React.FC<{
     onNavigate: (view: View) => void;
 }> = ({ selectedDate, log, checkIn, onNavigate }) => {
     
-    const hasAnyLogs = log && (log.workouts.length > 0 || log.nutrition || log.sleep || log.habits.length > 0) || checkIn;
+    const hasAnyLogs = log && (log.workouts.length > 0 || log.nutrition || log.sleep || (log.habits || []).length > 0) || checkIn;
 
     if (!hasAnyLogs) {
         return (
             <div className="text-center py-16 px-4 bg-surface dark:bg-dark-surface rounded-lg mt-6 shadow-sm dark:shadow-none">
-                <p className="text-text-secondary dark:text-dark-text-secondary">Нет записей за этот день.</p>
-                <p className="text-sm text-text-secondary dark:text-dark-text-secondary mt-1">Нажмите кнопку "+", чтобы добавить.</p>
+                <p className="text-text-secondary dark:text-dark-text-secondary">No logs for this day.</p>
+                <p className="text-sm text-text-secondary dark:text-dark-text-secondary mt-1">Tap the '+' button to add one.</p>
             </div>
         );
     }
@@ -172,34 +195,34 @@ const DayLogDisplay: React.FC<{
         <div className="mt-6 space-y-3">
             {checkIn && (
                  <LogSummaryCard icon={<CheckBadgeIcon className="w-6 h-6 text-green-500" />} title="Check-in" onClick={() => onNavigate('check-ins')}>
-                    <p>Вес: {checkIn.weight}кг, Талия: {checkIn.waist}см, Грудь: {checkIn.chest}см</p>
+                    <p>Weight: {checkIn.weight}kg, Waist: {checkIn.waist}cm, Chest: {checkIn.chest}cm</p>
                  </LogSummaryCard>
             )}
             {log?.sleep && (
-                <LogSummaryCard icon={<MoonIcon className="w-6 h-6 text-blue-500" />} title="Сон" onClick={() => onNavigate('sleep')}>
-                    <p>{log.sleep.durationHours} часов</p>
+                <LogSummaryCard icon={<MoonIcon className="w-6 h-6 text-blue-500" />} title="Sleep" onClick={() => onNavigate('sleep')}>
+                    <p>{log.sleep.durationHours} hours</p>
                 </LogSummaryCard>
             )}
             {log?.nutrition && (
-                 <LogSummaryCard icon={<ForkKnifeIcon className="w-6 h-6 text-primary dark:text-dark-primary" />} title="Питание" onClick={() => onNavigate('nutrition')}>
-                    <p>{log.nutrition.calories} ккал, {log.nutrition.protein}г Б, {log.nutrition.carbs}г У, {log.nutrition.fats}г Ж</p>
+                 <LogSummaryCard icon={<ForkKnifeIcon className="w-6 h-6 text-primary dark:text-dark-primary" />} title="Nutrition" onClick={() => onNavigate('nutrition')}>
+                    <p>{log.nutrition.calories} kcal, {log.nutrition.protein}g P, {log.nutrition.carbs}g C, {log.nutrition.fats}g F</p>
                  </LogSummaryCard>
             )}
              {log?.workouts && log.workouts.length > 0 && (
-                 <LogSummaryCard icon={<DumbbellIcon className="w-6 h-6 text-secondary dark:text-dark-secondary" />} title="Тренировка" onClick={() => onNavigate('routine')}>
+                 <LogSummaryCard icon={<DumbbellIcon className="w-6 h-6 text-secondary dark:text-dark-secondary" />} title="Workout" onClick={() => onNavigate('routine')}>
                     {log.workouts.map(w => <p key={w.id}>{w.name}</p>)}
                  </LogSummaryCard>
             )}
             {log?.habits && log.habits.length > 0 && (
-                <LogSummaryCard icon={<CheckBadgeIcon className="w-6 h-6 text-yellow-500" />} title="Привычки" onClick={() => {}}>
+                <LogSummaryCard icon={<CheckBadgeIcon className="w-6 h-6 text-yellow-500" />} title="Habits" onClick={() => {}}>
                     {log.habits.map(h => {
                         const iconMap = {
                             [HabitType.English]: <LanguageIcon className="w-4 h-4 text-blue-500 inline mr-2"/>,
                             [HabitType.Reading]: <BookOpenIcon className="w-4 h-4 text-yellow-500 inline mr-2"/>,
                             [HabitType.Blogging]: <PencilSquareIcon className="w-4 h-4 text-green-500 inline mr-2"/>
                         };
-                        const readingDetails = h.type === HabitType.Reading ? `(${(h as ReadingHabitLog).pagesRead} стр.)` : '';
-                        return <div key={h.id} className="flex items-center">{iconMap[h.type]} {h.type}: {h.durationMinutes} мин {readingDetails}</div>
+                        const readingDetails = h.type === HabitType.Reading ? `(${(h as ReadingHabitLog).pagesRead} pages)` : '';
+                        return <div key={h.id} className="flex items-center">{iconMap[h.type]} {h.type}: {h.durationMinutes} min {readingDetails}</div>
                     })}
                 </LogSummaryCard>
             )}
@@ -216,7 +239,7 @@ const MonthView: React.FC<{
     checkInsByDate: Map<string, CheckIn>;
 }> = ({ currentDate, setCurrentDate, onDayClick, logsByDate, checkInsByDate }) => {
     
-    const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     const startDay = startOfMonth.getDay();
@@ -279,7 +302,7 @@ const MonthView: React.FC<{
 };
 
 
-const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelectedDate, setView, setSelectedCheckInId }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelectedDate, setView, setSelectedCheckInId, setHabitToLog }) => {
   const [calendarMode, setCalendarMode] = useState<'week' | 'month'>('week');
   const [selectedDateInternal, setSelectedDateInternal] = useState(getLocalDateString(new Date()));
   const [displayMonth, setDisplayMonth] = useState(new Date());
@@ -289,19 +312,19 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelected
   const checkInsByDate = useMemo(() => new Map(checkIns.map(ci => [ci.date, ci])), [checkIns]);
 
   const openAddLogModal = (dateString: string) => {
-    const date = new Date(`${dateString}T00:00:00`);
-    const isMonday = date.getDay() === 1;
-    const canAddCheckIn = !checkInsByDate.has(dateString);
-    
     setSelectedDate(dateString);
     setIsChoiceModalOpen(true);
   };
   
-  const handleChoice = (view: 'routine' | 'nutrition' | 'sleep' | 'check-in-form') => {
-    if (view === 'check-in-form') {
+  const handleChoice = (choice: 'routine' | 'nutrition' | 'sleep' | 'check-in-form' | HabitType) => {
+    if (Object.values(HabitType).includes(choice as HabitType)) {
+        setHabitToLog(choice as HabitType);
+    } else if (choice === 'check-in-form') {
       setSelectedCheckInId(null);
+      setView(choice);
+    } else {
+        setView(choice as 'routine' | 'nutrition' | 'sleep');
     }
-    setView(view);
     setIsChoiceModalOpen(false);
   };
 
@@ -347,8 +370,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ logs, checkIns, setSelected
         isOpen={isChoiceModalOpen}
         onClose={() => setIsChoiceModalOpen(false)}
         onChoice={handleChoice}
-        isMonday={new Date(new Date().toDateString()).getDay() === 1}
-        canAddCheckIn={!checkInsByDate.has(getLocalDateString(new Date()))}
+        isMonday={isMondayForSelected}
+        canAddCheckIn={canAddCheckInForSelected}
        />
     </div>
   );

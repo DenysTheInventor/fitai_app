@@ -16,7 +16,7 @@ const ReadingLibraryView: React.FC<ReadingLibraryViewProps> = ({ books, allLogs,
   const booksWithProgress = useMemo(() => {
     return books.map(book => {
         const pagesRead = allLogs.reduce((total, log) => {
-            const pagesInLog = log.habits
+            const pagesInLog = (log.habits || [])
                 .filter(h => h.type === HabitType.Reading && (h as ReadingHabitLog).bookId === book.id)
                 .reduce((sum, h) => sum + (h as ReadingHabitLog).pagesRead, 0);
             return total + pagesInLog;

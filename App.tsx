@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet, OutdoorRunActivity, HabitLog, Book, ReadingHabitLog } from './types';
+import type { DailyLog, View, CustomExercise, UserSettings, AppData, CheckIn, ExerciseSet, OutdoorRunActivity, HabitLog, Book, ReadingHabitLog, GenericHabitLog } from './types';
 import { ActivityType, HabitType } from './types';
 import BottomNav from './components/BottomNav';
 import WorkoutLogger from './components/WorkoutLogger';
@@ -24,6 +24,7 @@ import ReadingLibraryView from './components/ReadingLibraryView';
 import BookFormView from './components/BookFormView';
 import { UserCircleIcon, ChevronLeftIcon } from './constants';
 import { useTheme } from './contexts/ThemeContext';
+import LogHabitModal from './components/LogHabitModal';
 
 const initialSettings: UserSettings = { 
     name: 'User', 
@@ -55,6 +56,7 @@ function App() {
   const [checkIns, setCheckIns] = useLocalStorage<CheckIn[]>('fitai-checkins', []);
   const [exerciseSets, setExerciseSets] = useLocalStorage<ExerciseSet[]>('fitai-sets', []);
   const [books, setBooks] = useLocalStorage<Book[]>('fitai-books', []);
+  const [habitToLog, setHabitToLog] = useState<HabitType | null>(null);
 
   // This effect runs once on startup to migrate any old log data.
   // It ensures that every log object has a `habits` array, providing
@@ -162,9 +164,8 @@ function App() {
   };
   
   const handleSaveHabit = (habitLog: HabitLog) => {
-      const today = getLocalDateString();
-      const logForToday = getLogForDate(today);
-      const updatedLog = { ...logForToday, habits: [...logForToday.habits, habitLog] };
+      const logForDate = getLogForDate(selectedDate);
+      const updatedLog = { ...logForDate, habits: [...(logForDate.habits || []), habitLog] };
       updateLogForDate(updatedLog);
 
       if (habitLog.type === HabitType.Reading) {
@@ -172,7 +173,7 @@ function App() {
         const book = books.find(b => b.id === readingHabit.bookId);
         if (book && !book.isFinished) {
             const totalPagesRead = logs.reduce((total, log) => {
-                const pages = log.habits
+                const pages = (log.habits || [])
                     .filter(h => h.type === HabitType.Reading && (h as ReadingHabitLog).bookId === readingHabit.bookId)
                     .reduce((sum, h) => sum + (h as ReadingHabitLog).pagesRead, 0);
                 return total + pages;
@@ -224,9 +225,9 @@ function App() {
 
     switch (view) {
       case 'home':
-        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} onSaveHabit={handleSaveHabit} books={books} />;
+        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} setHabitToLog={setHabitToLog} />;
       case 'calendar':
-        return <CalendarView logs={logs} checkIns={checkIns} setSelectedDate={setSelectedDate} setView={setView} setSelectedCheckInId={setSelectedCheckInId} />;
+        return <CalendarView logs={logs} checkIns={checkIns} setSelectedDate={setSelectedDate} setView={setView} setSelectedCheckInId={setSelectedCheckInId} setHabitToLog={setHabitToLog} />;
       case 'routine':
         return <WorkoutLogger selectedDateLog={logForSelectedDate} onUpdateLog={updateLogForDate} customExercises={customExercises} allLogs={logs} exerciseSets={exerciseSets} />;
       case 'nutrition':
@@ -280,7 +281,7 @@ function App() {
         const selectedCheckIn = checkIns.find(ci => ci.id === selectedCheckInId);
         return <CheckInDetailView checkIn={selectedCheckIn} goBack={goBack} />;
       default:
-        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} onSaveHabit={handleSaveHabit} books={books} />;
+        return <HomeView todayLog={getLogForDate(today)} allLogs={logs} setView={setView} setSelectedDate={setSelectedDate} checkIns={checkIns} setHabitToLog={setHabitToLog} />;
     }
   };
 
@@ -356,6 +357,16 @@ function App() {
       </main>
       
       <BottomNav currentView={view} setView={setView} />
+
+      {habitToLog && (
+        <LogHabitModal
+            habitType={habitToLog}
+            onClose={() => setHabitToLog(null)}
+            onSave={handleSaveHabit}
+            books={books}
+            allLogs={logs}
+        />
+      )}
     </div>
   );
 }

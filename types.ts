@@ -87,6 +87,7 @@ export interface ReadingHabitLog extends BaseHabitLog {
 
 export interface GenericHabitLog extends BaseHabitLog {
     type: HabitType.English | HabitType.Blogging;
+    notes?: string;
 }
 
 export type HabitLog = ReadingHabitLog | GenericHabitLog;
